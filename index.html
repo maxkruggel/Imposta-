@@ -18,7 +18,7 @@
 :root{
   --bg:#0a0a0a; --surface:#14131c; --surface-2:#181725;
   --line:#282636; --line-soft:#1c1b26;
-  --ink:#e9e9e9; --ink-strong:#fafafa; --muted:#7c7c7c; --muted-2:#565656;
+  --ink:#e9e9e9; --ink-strong:#fafafa; --muted:#9a9a9a; --muted-2:#6f6f6f;
   --accent:#8b7ff5; --accent-ink:#b5acf9;
   --accent-soft:rgba(139,127,245,.12); --accent-edge:rgba(139,127,245,.45);
   --accent-glow:rgba(139,127,245,.28);
@@ -28,6 +28,40 @@
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
   --r-sm:6px; --r-md:12px; --r-lg:18px; --r-xl:24px; --r-pill:999px;
 }
+/* ============ Light Theme: Beige ============ */
+:root[data-theme="light"]{
+  --bg:#efe9dd; --surface:#f6f1e7; --surface-2:#fbf7ee;
+  --line:#d6cdb9; --line-soft:#e3dbc9;
+  --ink:#2b2822; --ink-strong:#171511; --muted:#6b6557; --muted-2:#8f8773;
+  --accent:#6f61e6; --accent-ink:#5546d2;
+  --accent-soft:rgba(111,97,230,.10); --accent-edge:rgba(111,97,230,.45);
+  --accent-glow:rgba(111,97,230,.20);
+}
+:root[data-theme="light"] body::before{
+  background:
+    radial-gradient(90% 45% at 50% -12%, rgba(111,97,230,.10), transparent 62%),
+    radial-gradient(70% 34% at 18% 112%, rgba(111,97,230,.06), transparent 60%);
+}
+:root[data-theme="light"] body::after{opacity:.5; filter:invert(1)}
+:root[data-theme="light"] .btn-accent{
+  background:linear-gradient(180deg, #8578ee, var(--accent) 70%);
+  color:#fffdf8;
+}
+:root[data-theme="light"] .holdcard{
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52'%3E%3Ctext x='26' y='34' text-anchor='middle' font-family='monospace' font-size='22' fill='rgba(111,97,230,0.07)'%3E%3F%3C/text%3E%3C/svg%3E"),
+    linear-gradient(165deg, #ece4f2, var(--surface) 55%);
+  box-shadow:0 24px 60px -26px rgba(74,62,38,.45), 0 0 0 1px rgba(0,0,0,.03);
+}
+:root[data-theme="light"] .holdcard.holding{
+  background:linear-gradient(165deg, #e6def4, #f1ece1 60%);
+  box-shadow:0 30px 70px -26px rgba(74,62,38,.5), 0 0 50px -8px var(--accent-glow);
+}
+:root[data-theme="light"] .sec,
+:root[data-theme="light"] .res-card{box-shadow:0 14px 34px -26px rgba(74,62,38,.5)}
+:root[data-theme="light"] .big-stage,
+:root[data-theme="light"] .res-hero{box-shadow:0 20px 50px -34px rgba(74,62,38,.55), inset 0 1px 0 rgba(255,255,255,.5)}
+
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{
@@ -415,7 +449,8 @@ header{
 }
 .res-wordline{display:flex; align-items:center; gap:var(--s3)}
 .res-wordline .stage-ic{flex-shrink:0}
-.res-w{font-size:24px; font-weight:700; color:var(--accent-ink); text-shadow:0 0 26px var(--accent-glow); word-break:break-word}
+.res-w{font-size:24px; font-weight:700; color:var(--accent-ink); text-shadow:0 0 26px var(--accent-glow)}
+.res-w,.stage-word,.secret-word{word-break:normal; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto}
 .res-d{font-size:13.5px; color:var(--muted); line-height:1.5; margin-top:var(--s2)}
 .res-q{font-size:15px; font-weight:500; color:var(--ink); margin-bottom:var(--s3); line-height:1.4}
 .res-q.done{color:var(--accent-ink); margin-bottom:0}
@@ -453,6 +488,7 @@ header{
 </style>
 </head>
 <body>
+<script>try{if(localStorage.getItem('impostor_theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
 <svg width="0" height="0" style="position:absolute">
   <defs>
     <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
@@ -526,6 +562,13 @@ header{
 
     <div class="sec">
       <span class="eyebrow">Extras</span>
+      <div class="line-row">
+        <div>
+          <div class="row-label">Helles Design</div>
+          <div class="row-sub">Beige – Standard ist das dunkle Theme</div>
+        </div>
+        <div class="toggle" id="tg-theme" role="switch" aria-checked="false"></div>
+      </div>
       <div class="line-row">
         <div>
           <div class="row-label">Tonanalyse</div>
@@ -1400,6 +1443,23 @@ $('tg-pics').onclick = function(){
   this.classList.toggle('on', state.pics); this.setAttribute('aria-checked', state.pics);
   save();
 };
+
+/* ==================== THEME ==================== */
+const THEME_KEY = 'impostor_theme';
+function applyTheme(){
+  const light = store ? store.getItem(THEME_KEY) === 'light' : false;
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  const m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.content = light ? '#efe9dd' : '#0a0a0a';
+  const t = $('tg-theme');
+  t.classList.toggle('on', light); t.setAttribute('aria-checked', light);
+}
+$('tg-theme').onclick = ()=>{
+  const light = document.documentElement.dataset.theme === 'light';
+  if(store){ try{ store.setItem(THEME_KEY, light ? 'dark' : 'light'); }catch(e){} }
+  applyTheme();
+};
+applyTheme();
 
 /* ==================== STATISTIK-SCREEN ==================== */
 function renderStats(){
