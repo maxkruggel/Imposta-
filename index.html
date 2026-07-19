@@ -335,14 +335,97 @@ header{
   text-shadow:0 0 30px var(--accent-glow);
 }
 
+/* ============ Splash: Figur lädt sich von unten nach oben auf ============ */
+#splash{
+  position:fixed; inset:0; z-index:90; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--s5);
+  transition:opacity .45s ease;
+}
+#splash::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(70% 40% at 50% 30%, rgba(139,127,245,.10), transparent 65%);
+}
+#splash.done{opacity:0; pointer-events:none}
+#splash .imp-fig{filter:none}
+.splash-fig{position:relative; width:120px; height:120px}
+.splash-fig .lay{position:absolute; inset:0; display:block}
+.splash-fig .lay.dim{color:var(--line)}
+.splash-fig .lay.fill{
+  color:var(--accent); filter:drop-shadow(0 0 26px var(--accent-glow));
+  clip-path:inset(100% 0 0 0);
+  animation:figfill 1.5s .15s cubic-bezier(.35,.6,.25,1) forwards;
+}
+@keyframes figfill{to{clip-path:inset(0 0 0 0)}}
+.splash-bar{width:132px; height:3px; border-radius:var(--r-pill); background:var(--line-soft); overflow:hidden}
+.splash-bar i{
+  display:block; height:100%; width:0; border-radius:var(--r-pill);
+  background:linear-gradient(90deg,#b5acf9,var(--accent));
+  box-shadow:0 0 12px var(--accent-glow);
+  animation:barfill 1.5s .15s cubic-bezier(.35,.6,.25,1) forwards;
+}
+@keyframes barfill{to{width:100%}}
+.splash-mark{font-weight:700; font-size:13px; letter-spacing:.3em; color:var(--muted); text-transform:uppercase}
+.splash-mark b{color:var(--accent)}
+
+/* ============ Tisch & Sitzplätze ============ */
+.seatmap{display:flex; flex-direction:column; gap:var(--s3); margin-top:var(--s4)}
+.seatmap[hidden]{display:none}
+.seat-zone{display:flex; flex-wrap:wrap; gap:var(--s2); justify-content:center; align-items:center; min-height:38px}
+.seat-zone.top .chip{transform:rotate(180deg)}
+.chip{
+  padding:8px 14px; border-radius:var(--r-pill);
+  background:var(--surface-2); border:1px solid var(--line);
+  font-family:var(--grotesk); font-size:13px; font-weight:500; color:var(--ink); cursor:pointer;
+  transition:border-color .12s, box-shadow .12s, transform .18s;
+}
+.chip:active{border-color:var(--accent-edge); box-shadow:0 0 14px var(--accent-soft)}
+.seat-empty{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2); font-weight:500}
+.table-slab{
+  height:36px; border-radius:var(--r-md);
+  background:linear-gradient(180deg, var(--surface-2), var(--surface));
+  border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+.table-slab.square{width:56%; margin:0 auto; height:48px}
+.table-slab span{font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted-2); font-weight:500}
+
+/* ============ Auflösung: Hero + Karten ============ */
+.res-hero{
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:var(--s3);
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgba(139,127,245,.13), transparent 62%),
+    linear-gradient(180deg, var(--surface-2), var(--surface) 70%);
+  border:1px solid var(--line-soft); border-radius:var(--r-xl);
+  padding:var(--s6) var(--s5);
+  box-shadow:0 26px 60px -34px rgba(0,0,0,.95), inset 0 0 70px -34px var(--accent-glow);
+  margin-bottom:var(--s4);
+}
+.res-card{
+  background:linear-gradient(180deg, rgba(139,127,245,.045), transparent 55%), var(--surface);
+  border:1px solid var(--line-soft); border-radius:var(--r-lg);
+  padding:var(--s4); margin-bottom:var(--s4);
+  box-shadow:0 18px 44px -30px rgba(0,0,0,.9);
+}
+.res-card[hidden]{display:none}
+.res-k{
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--muted-2); font-weight:500; margin-bottom:var(--s3);
+  padding-bottom:var(--s2); border-bottom:1px solid var(--line-soft);
+}
+.res-wordline{display:flex; align-items:center; gap:var(--s3)}
+.res-wordline .stage-ic{flex-shrink:0}
+.res-w{font-size:24px; font-weight:700; color:var(--accent-ink); text-shadow:0 0 26px var(--accent-glow); word-break:break-word}
+.res-d{font-size:13.5px; color:var(--muted); line-height:1.5; margin-top:var(--s2)}
+.res-q{font-size:15px; font-weight:500; color:var(--ink); margin-bottom:var(--s3); line-height:1.4}
+.res-q.done{color:var(--accent-ink); margin-bottom:0}
+
 /* Grotesk überall: Micro-Labels mit Medium-Gewicht für grafische Schärfe */
 .eyebrow,.stage-eyebrow,.readout,.btn-reset,.link-btn,.seg button,.hold-hint,
 .secret-label,.player-no,.t-label,.next-hint,.cat-actions button,.cat-count,
 .row-sub,.sus-note,.sus-val,.stat-val,.hint-err,.tag-18,.name-field .idx{font-weight:500}
 
 /* ============ Extras: Begriff-Bilder, Verdachts-Index, Statistik ============ */
-#res-outcome{display:flex; flex-direction:column; align-items:center; gap:var(--s4); width:100%}
-#res-outcome .seg{width:100%; max-width:320px}
 #res-outcome .seg button{padding:14px 10px}
 .btn-reset.off{color:var(--muted-2); text-decoration:line-through; text-decoration-color:var(--muted-2)}
 .word-img{max-width:58%; max-height:120px; border-radius:var(--r-md); border:1px solid var(--line); margin-top:var(--s3); box-shadow:0 14px 34px -18px rgba(0,0,0,.9)}
@@ -365,6 +448,7 @@ header{
 
 @media (prefers-reduced-motion: reduce){
   .app,.screen.active,.count-num,.count-go,.wordmark span,.float,.imp-fig .eye,.holdcard{animation:none; transition:none}
+  #splash{display:none}
 }
 </style>
 </head>
@@ -376,6 +460,7 @@ header{
     </linearGradient>
   </defs>
 </svg>
+<div id="splash" aria-hidden="true"></div>
 <div class="app" id="app">
   <header>
     <div class="wordmark">IMPOSTOR<span>.</span></div>
@@ -429,12 +514,14 @@ header{
     </div>
 
     <div class="sec">
-      <span class="eyebrow">Handy auf dem Tisch</span>
-      <div class="seg" id="seg-table">
-        <button data-mode="flip" class="on">Liegt · 2 gegenüber 2</button>
-        <button data-mode="static">Wandert · runder Tisch</button>
+      <span class="eyebrow">Tisch &amp; Sitzplätze</span>
+      <div class="seg" id="seg-shape">
+        <button data-shape="rect" class="on">Rechteckig</button>
+        <button data-shape="square">Quadratisch</button>
+        <button data-shape="round">Rund</button>
       </div>
-      <div class="seg-note" id="seg-note">Der Bildschirm dreht sich automatisch zur Tischseite des Spielers, der gerade dran ist – erste Hälfte diesseits, zweite Hälfte gegenüber.</div>
+      <div class="seatmap" id="seatmap"></div>
+      <div class="seg-note" id="seg-note"></div>
     </div>
 
     <div class="sec">
@@ -540,18 +627,21 @@ header{
 
   <!-- ============ AUFLÖSUNG ============ -->
   <section class="screen" id="scr-result">
-    <div class="big-stage">
-      <span class="stage-ic" id="res-ic"></span>
-      <div class="stage-eyebrow" id="res-cat">Kategorie</div>
-      <div class="stage-word" id="res-word">Wort</div>
-      <div class="stage-def" id="res-def"></div>
-      <img class="word-img" id="res-img" alt="" hidden>
-      <div class="divider"></div>
+    <div class="res-hero">
       <span id="res-fig" class="float"></span>
-      <div class="stage-eyebrow">Impostor war</div>
+      <div class="stage-eyebrow" id="res-imp-label">Der Impostor</div>
       <div class="res-names" id="res-imp">–</div>
-      <div id="res-outcome"></div>
     </div>
+    <div class="res-card">
+      <div class="res-k" id="res-cat">Das Wort</div>
+      <div class="res-wordline">
+        <span class="stage-ic" id="res-ic"></span>
+        <div class="res-w" id="res-word">Wort</div>
+      </div>
+      <div class="res-d" id="res-def"></div>
+      <img class="word-img" id="res-img" alt="" hidden>
+    </div>
+    <div class="res-card" id="res-outcome"></div>
     <div class="actions">
       <button class="btn btn-accent" id="btn-again">Nächste Runde</button>
       <button class="btn btn-quiet" id="btn-newgame">Neues Spiel</button>
@@ -1127,7 +1217,8 @@ const state = {
   names: [],
   impostors: 1,
   impostorHint: true,
-  tableMode: 'flip',
+  tableShape: 'rect',
+  seats: [],
   voice: false,
   pics: false,
   selected: new Set(CATS.filter(c=>!c.adult).map(c=>c.id)),
@@ -1154,7 +1245,7 @@ function save(){
   try{
     store.setItem(SAVE_KEY, JSON.stringify({
       players:state.players, names:state.names, impostors:state.impostors,
-      impostorHint:state.impostorHint, tableMode:state.tableMode,
+      impostorHint:state.impostorHint, tableShape:state.tableShape, seats:state.seats,
       voice:state.voice, pics:state.pics,
       selected:[...state.selected],
       used:Object.fromEntries(CATS.map(c=>[c.id,[...state.used[c.id]]])),
@@ -1170,8 +1261,20 @@ function loadSave(){
 }
 function clearSave(){ if(store){ try{ store.removeItem(SAVE_KEY); }catch(e){} } }
 
+function ensureSeats(){
+  if(!Array.isArray(state.seats)) state.seats = [];
+  if(!state.seats.length){
+    for(let i=0;i<state.players;i++) state.seats.push(i < Math.ceil(state.players/2) ? 0 : 1);
+  }
+  while(state.seats.length < state.players){
+    const unten = state.seats.filter(s=>s===0).length;
+    state.seats.push(unten <= state.seats.length - unten ? 0 : 1);
+  }
+  state.seats.length = state.players;
+}
 function applyFlip(playerIdx){
-  const flip = state.tableMode==='flip' && playerIdx >= Math.ceil(state.players/2);
+  ensureSeats();
+  const flip = state.tableShape !== 'round' && state.seats[playerIdx] === 1;
   $('app').classList.toggle('flip', flip);
 }
 function show(id, readout){
@@ -1232,7 +1335,7 @@ function renderNames(){
     const inp = document.createElement('input');
     inp.type='text'; inp.placeholder='Spieler '+(i+1); inp.maxLength=16;
     inp.autocapitalize='words'; inp.value = state.names[i]||'';
-    inp.oninput = ()=>{ state.names[i]=inp.value; save(); };
+    inp.oninput = ()=>{ state.names[i]=inp.value; renderSeats(); save(); };
     f.appendChild(inp); box.appendChild(f);
   }
 }
@@ -1251,11 +1354,34 @@ function renderSetup(){
   $('tg-pics').setAttribute('aria-checked', state.pics);
   const tr = STATS.totalRounds();
   $('stats-sub').textContent = tr ? tr + ' Runden erfasst' : 'Noch keine Runden erfasst';
-  document.querySelectorAll('#seg-table button').forEach(b=>b.classList.toggle('on', b.dataset.mode===state.tableMode));
-  $('seg-note').textContent = state.tableMode==='flip'
-    ? 'Der Bildschirm dreht sich automatisch zur Tischseite des Spielers, der gerade dran ist – erste Hälfte diesseits, zweite Hälfte gegenüber.'
-    : 'Keine Drehung – das Handy wird weitergereicht oder liegt in der Mitte.';
+  document.querySelectorAll('#seg-shape button').forEach(b=>b.classList.toggle('on', b.dataset.shape===state.tableShape));
+  renderSeats();
   renderNames();
+}
+function renderSeats(){
+  ensureSeats();
+  const wrap = $('seatmap');
+  if(state.tableShape === 'round'){
+    wrap.hidden = true; wrap.innerHTML = '';
+    $('seg-note').textContent = 'Runder Tisch – das Handy wandert reihum, der Bildschirm dreht sich nicht.';
+    return;
+  }
+  wrap.hidden = false;
+  const chip = i => '<button class="chip" data-i="'+i+'">'+esc(pname(i))+'</button>';
+  const oben = [], unten = [];
+  for(let i=0;i<state.players;i++) (state.seats[i]===1 ? oben : unten).push(chip(i));
+  wrap.innerHTML =
+    '<div class="seat-zone top">'+(oben.join('') || '<span class="seat-empty">Niemand gegenüber</span>')+'</div>'
+    + '<div class="table-slab'+(state.tableShape==='square' ? ' square' : '')+'"><span>Tisch</span></div>'
+    + '<div class="seat-zone">'+(unten.join('') || '<span class="seat-empty">Niemand auf dieser Seite</span>')+'</div>';
+  wrap.querySelectorAll('.chip').forEach(b=>{
+    b.onclick = ()=>{
+      const i = +b.dataset.i;
+      state.seats[i] = state.seats[i]===1 ? 0 : 1;
+      renderSeats(); save();
+    };
+  });
+  $('seg-note').textContent = 'Namen antippen, um sie auf die andere Tischseite zu setzen. Für alle gegenüber dreht sich der Bildschirm um 180 Grad.';
 }
 $('pl-minus').onclick = ()=>{ state.players=Math.max(3,state.players-1); state.impostors=Math.min(state.impostors,maxImp()); renderSetup(); save(); };
 $('pl-plus').onclick  = ()=>{ state.players=Math.min(20,state.players+1); renderSetup(); save(); };
@@ -1303,8 +1429,8 @@ $('btn-stats-clear').onclick = function(){
   clearTimeout(statsArmT); statsArm = false; this.textContent = 'Statistik löschen';
   STATS.clear(); renderStats();
 };
-document.querySelectorAll('#seg-table button').forEach(b=>{
-  b.onclick = ()=>{ state.tableMode=b.dataset.mode; renderSetup(); save(); };
+document.querySelectorAll('#seg-shape button').forEach(b=>{
+  b.onclick = ()=>{ state.tableShape=b.dataset.shape; renderSetup(); save(); };
 });
 
 function renderCats(){
@@ -1522,10 +1648,11 @@ $('btn-solve').onclick = ()=>{
   const cat = catById(state.catId);
   const imps = state.roles.map((r,i)=>r?pname(i):null).filter(Boolean);
   $('res-ic').innerHTML = icon(cat.id,'stage-ic');
-  $('res-cat').textContent  = cat.name;
+  $('res-cat').textContent  = 'Das Wort · ' + cat.name;
   $('res-word').textContent = state.word;
   $('res-def').textContent  = state.def;
   $('res-fig').innerHTML    = IMP_FIG(76);
+  $('res-imp-label').textContent = imps.length > 1 ? 'Die Impostor' : 'Der Impostor';
   $('res-imp').innerHTML    = imps.join('<br>');
   const ri = $('res-img');
   ri.hidden = true; ri.removeAttribute('src');
@@ -1540,12 +1667,13 @@ $('btn-solve').onclick = ()=>{
 
 function renderOutcome(){
   const box = $('res-outcome');
+  box.hidden = statsRecorded;
   if(statsRecorded){ box.innerHTML = ''; return; }
-  box.innerHTML = '<div class="divider"></div>'
-    + '<div class="stage-eyebrow">Und? Erwischt?</div>'
+  box.innerHTML = '<div class="res-k">Rundenausgang</div>'
+    + '<div class="res-q">Habt ihr den Impostor erwischt?</div>'
     + '<div class="seg" id="seg-outcome">'
-    + '<button data-oc="caught">Enttarnt</button>'
-    + '<button data-oc="escaped">Durchgekommen</button>'
+    + '<button data-oc="caught">Ja – enttarnt</button>'
+    + '<button data-oc="escaped">Nein – durchgekommen</button>'
     + '</div>';
   box.querySelectorAll('#seg-outcome button').forEach(b=>{
     b.onclick = ()=>{
@@ -1553,9 +1681,9 @@ function renderOutcome(){
       statsRecorded = true;
       STATS.record(b.dataset.oc);
       SND.tick();
-      box.innerHTML = '<div class="divider"></div>'
-        + '<div class="stage-eyebrow">Notiert – Impostor '
-        + (b.dataset.oc==='caught' ? 'enttarnt' : 'durchgekommen') + '</div>';
+      box.innerHTML = '<div class="res-k">Rundenausgang</div>'
+        + '<div class="res-q done">Notiert – der Impostor wurde '
+        + (b.dataset.oc==='caught' ? 'enttarnt' : 'nicht erwischt') + '.</div>';
     };
   });
 }
@@ -1572,7 +1700,10 @@ function renderResume(){
 $('btn-resume').onclick = ()=>{
   const s = loadSave(); if(!s) return;
   state.players=s.players; state.names=s.names||[]; state.impostors=s.impostors;
-  state.impostorHint=s.impostorHint; state.tableMode=s.tableMode||'flip';
+  state.impostorHint=s.impostorHint;
+  state.tableShape = s.tableShape || (s.tableMode==='static' ? 'round' : 'rect');
+  state.seats = Array.isArray(s.seats) ? s.seats : [];
+  ensureSeats();
   state.voice=!!s.voice; state.pics=!!s.pics;
   if(state.voice) VOICE.enable();
   state.selected = new Set(s.selected);
@@ -1593,7 +1724,9 @@ $('btn-resume').onclick = ()=>{
     state.players = s.players||4; state.names = s.names||[];
     state.impostors = Math.min(s.impostors||1, maxImp());
     state.impostorHint = s.impostorHint!==false;
-    state.tableMode = s.tableMode||'flip';
+    state.tableShape = s.tableShape || (s.tableMode==='static' ? 'round' : 'rect');
+    state.seats = Array.isArray(s.seats) ? s.seats : [];
+    state.voice = !!s.voice; state.pics = !!s.pics;
     if(s.selected) state.selected = new Set(s.selected);
     if(s.used) CATS.forEach(c=>state.used[c.id] = new Set(s.used[c.id]||[]));
   }
@@ -1601,6 +1734,24 @@ $('btn-resume').onclick = ()=>{
   renderSetup();
   renderCats();
   renderResume();
+
+  /* Splash: Figur lädt sich von unten nach oben auf, dann öffnet sich die App */
+  const sp = $('splash');
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+    sp.remove();
+  } else {
+    sp.innerHTML =
+      '<div class="splash-fig">'
+      + '<span class="lay dim">' + IMP_FIG(120) + '</span>'
+      + '<span class="lay fill">' + IMP_FIG(120) + '</span>'
+      + '</div>'
+      + '<div class="splash-bar"><i></i></div>'
+      + '<div class="splash-mark">Impostor<b>.</b></div>';
+    setTimeout(()=>{
+      sp.classList.add('done');
+      setTimeout(()=>sp.remove(), 500);
+    }, 1850);
+  }
 })();
 </script>
 <script>
