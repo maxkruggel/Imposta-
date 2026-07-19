@@ -1,4 +1,4 @@
-const CACHE = 'impostor-v4';
+const CACHE = 'impostor-v5';
 const CORE = [
   './',
   './index.html',
