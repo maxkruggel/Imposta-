@@ -450,7 +450,9 @@ header{
 .res-wordline{display:flex; align-items:center; gap:var(--s3)}
 .res-wordline .stage-ic{flex-shrink:0}
 .res-w{font-size:24px; font-weight:700; color:var(--accent-ink); text-shadow:0 0 26px var(--accent-glow)}
-.res-w,.stage-word,.secret-word{word-break:normal; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto}
+.res-w,.stage-word,.secret-word{word-break:normal; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto; min-width:0}
+.res-w.long{font-size:20px}
+.secret-word.long{font-size:21px}
 .res-d{font-size:13.5px; color:var(--muted); line-height:1.5; margin-top:var(--s2)}
 .res-q{font-size:15px; font-weight:500; color:var(--ink); margin-bottom:var(--s3); line-height:1.4}
 .res-q.done{color:var(--accent-ink); margin-bottom:0}
@@ -769,7 +771,17 @@ const CATS = [
     ['FKK-Strand','Strand für Nacktbadende'],
     ['Sextape','Privates Video beim Sex'],
     ['Stripclub','Lokal mit Ausziehshows'],
-    ['Aphrodisiakum','Mittel, das die Lust steigern soll']
+    ['Aphrodisiakum','Mittel, das die Lust steigern soll'],
+    ['Tantra','Achtsame Liebeskunst aus Indien'],
+    ['Strip-Poker','Kartenspiel, Verlierer zieht blank'],
+    ['Blind Date','Erstes Treffen mit ganz Unbekannten'],
+    ['Liebesschaukel','Sportgerät fürs Schlafzimmer'],
+    ['Stundenhotel','Zimmer zahlt man hier pro Stunde'],
+    ['Erotikhotline','Heiße Gespräche gegen Gebühr'],
+    ['Bodypainting','Kunst direkt auf nackter Haut'],
+    ['Pole Dance','Akrobatik an der Stange'],
+    ['Dominatrix','Strenge Herrin im Rollenspiel'],
+    ['Techtelmechtel','Heimliche kleine Affäre']
   ]},
   { id:'landwirtschaft', name:'Landwirtschaft', words:[
     ['Mähdrescher','Erntemaschine für Getreide'],
@@ -802,7 +814,17 @@ const CATS = [
     ['Traktorreifen','Großer Reifen mit grobem Profil'],
     ['Milchtankstelle','Automat für frische Rohmilch'],
     ['Wildschaden','Flurschaden durch Wildschweine und Co.'],
-    ['Jauchegrube','Sammelbecken für flüssigen Mist']
+    ['Jauchegrube','Sammelbecken für flüssigen Mist'],
+    ['Kartoffelroder','Maschine holt Knollen aus dem Boden'],
+    ['Vogelscheuche','Stoffmann gegen hungrige Vögel'],
+    ['Maislabyrinth','Irrgarten im hohen Feld'],
+    ['Bauernregel','Wetterweisheit vom Land'],
+    ['Freilandhaltung','Hühner dürfen nach draußen'],
+    ['Kuhglocke','Läutet blechern auf der Weide'],
+    ['Mistgabel','Werkzeug für den Stall'],
+    ['Bienenstock','Zuhause vom Honigvolk'],
+    ['Streuobstwiese','Wiese voller alter Obstbäume'],
+    ['Melkschemel','Hocker fürs Kühemelken']
   ]},
   { id:'fotografie', name:'Fotografie', words:[
     ['Blende','Öffnung im Objektiv, regelt das Licht'],
@@ -835,7 +857,17 @@ const CATS = [
     ['Selbstauslöser','Kamera löst zeitverzögert aus'],
     ['Blitzsynchronzeit','Kürzeste Verschlusszeit für Blitzaufnahmen'],
     ['Stativkopf','Bewegliches Gelenk auf dem Stativ'],
-    ['Chromatische Aberration','Farbsäume an Kontrastkanten']
+    ['Chromatische Aberration','Farbsäume an Kontrastkanten'],
+    ['Lightpainting','Malen mit Taschenlampe bei Nacht'],
+    ['Passbild','Strenges Foto für den Ausweis'],
+    ['Fotobombe','Ungebetener Gast im Bild'],
+    ['Selfiestick','Verlängerter Arm fürs Handyfoto'],
+    ['Blaue Stunde','Dämmerlicht nach Sonnenuntergang'],
+    ['Serienaufnahme','Viele Bilder pro Sekunde'],
+    ['Lochkamera','Fotografieren durch ein winziges Loch'],
+    ['Bildstabilisator','Gleicht zittrige Hände aus'],
+    ['Weitwinkel','Objektiv sieht besonders viel'],
+    ['Gegenlicht','Sonne strahlt frontal in die Linse']
   ]},
   { id:'staedte', name:'Städte', words:[
     ['Reykjavik','Hauptstadt von Island'],
@@ -868,7 +900,17 @@ const CATS = [
     ['Heidelberg','Schloss- und Unistadt am Neckar'],
     ['Chiang Mai','Tempelstadt in Nordthailand'],
     ['Münster','Fahrradstadt in Westfalen'],
-    ['Salzburg','Mozartstadt in Österreich']
+    ['Salzburg','Mozartstadt in Österreich'],
+    ['Lissabon','Hügelstadt mit gelben Trams'],
+    ['Dubrovnik','Ummauerte Perle an der Adria'],
+    ['Helsinki','Finnlands kühle Hauptstadt'],
+    ['Edinburgh','Schottlands Stadt unterm Burgfelsen'],
+    ['Verona','Stadt von Romeo und Julia'],
+    ['Granada','Alhambra-Stadt in Andalusien'],
+    ['Rotterdam','Hafenriese mit kühner Architektur'],
+    ['Danzig','Polens Bernsteinstadt am Meer'],
+    ['Singapur','Asiens blitzblanker Stadtstaat'],
+    ['Kopenhagen','Meerjungfrau und Fahrradstadt']
   ]},
   { id:'musik', name:'Musik', words:[
     ['Falsett','Künstlich hohe Kopfstimme'],
@@ -901,7 +943,17 @@ const CATS = [
     ['Tonleiter','Tonfolge, zum Beispiel C-Dur'],
     ['Airplay','Einsätze eines Songs im Radio'],
     ['Chartstürmer','Song, der schnell die Charts erklimmt'],
-    ['Vinylpressung','Herstellung einer Schallplatte']
+    ['Vinylpressung','Herstellung einer Schallplatte'],
+    ['Ohrwurm','Song geht nicht mehr aus dem Kopf'],
+    ['Luftgitarre','Solo ganz ohne Instrument'],
+    ['Straßenmusiker','Konzert am Bordstein für Kleingeld'],
+    ['Stimmgabel','Metallzinken geben den Ton an'],
+    ['Drehorgel','Kurbelmusik vom Jahrmarkt'],
+    ['Setlist','Songliste fürs Konzert'],
+    ['Backstagepass','Ticket hinter die Bühne'],
+    ['Stagediving','Sprung von der Bühne ins Publikum'],
+    ['Blaskapelle','Blechmusik im Festzelt'],
+    ['Notenständer','Halter fürs Notenblatt']
   ]},
   { id:'technologie', name:'Technologie', words:[
     ['Firewall','Schutzwall gegen Netzwerkangriffe'],
@@ -934,7 +986,17 @@ const CATS = [
     ['Startup-Pitch','Kurzpräsentation einer Geschäftsidee'],
     ['Softwareupdate','Aktualisierung eines Programms'],
     ['Glasfaser','Schnellste Internetleitung'],
-    ['Jailbreak','Entsperren gesperrter Gerätesoftware']
+    ['Jailbreak','Entsperren gesperrter Gerätesoftware'],
+    ['Passwort-Manager','Tresor für alle Logins'],
+    ['Smart Home','Wohnung hört aufs Wort'],
+    ['Ladebalken','Zeigt, wie lange es noch dauert'],
+    ['Inkognito-Modus','Surfen ohne Spuren im Verlauf'],
+    ['Drohne','Fliegende Kamera mit Propellern'],
+    ['Emoji','Kleines Bildchen statt vieler Worte'],
+    ['Saugroboter','Runder Helfer frisst Krümel'],
+    ['Bluetooth','Funk für kurze Strecken'],
+    ['QR-Code','Quadratisches Muster zum Scannen'],
+    ['Datenkrake','Konzern sammelt alles über dich']
   ]},
   { id:'outdoor', name:'Berge & Outdoor', words:[
     ['Klettersteig','Gesicherte Route mit Stahlseil'],
@@ -966,7 +1028,17 @@ const CATS = [
     ['Weitwanderweg','Mehrtägige Fernwanderroute'],
     ['Bergwacht','Rettungsdienst in den Bergen'],
     ['Schneefeld','Schneerest am Sommerhang'],
-    ['Panoramaweg','Wanderweg mit Aussicht']
+    ['Panoramaweg','Wanderweg mit Aussicht'],
+    ['Gipfelbuch','Heft zum Eintragen ganz oben'],
+    ['Regenradar','App sagt den Schauer voraus'],
+    ['Nordwand','Schattige Steilseite des Bergs'],
+    ['Edelweiß','Seltene Blume der Alpen'],
+    ['Steinmännchen','Gestapelte Wegmarkierung'],
+    ['Hängematte','Schlafnetz zwischen zwei Bäumen'],
+    ['Fernglas','Bringt ferne Gipfel ganz nah'],
+    ['Proviant','Brotzeit im Rucksack'],
+    ['Zeckenzange','Werkzeug gegen ungebetene Blutsauger'],
+    ['Wanderschuhe','Festes Schuhwerk für den Berg']
   ]},
   { id:'kueche', name:'Küche & Kochen', words:[
     ['Sous-vide','Garen im Vakuumbeutel bei Niedrigtemperatur'],
@@ -998,7 +1070,17 @@ const CATS = [
     ['Karamellisieren','Zucker braun schmelzen lassen'],
     ['Vinaigrette','Salatsauce aus Essig und Öl'],
     ['Brühwürfel','Gepresste Instantbrühe'],
-    ['Resteessen','Gericht aus Übriggebliebenem']
+    ['Resteessen','Gericht aus Übriggebliebenem'],
+    ['Al dente','Nudeln mit Biss'],
+    ['Bain-Marie','Wasserbad fürs sanfte Erwärmen'],
+    ['Geheimzutat','Das verrät der Koch nie'],
+    ['Umluft','Heißer Wind im Backofen'],
+    ['Marinade','Würzbad fürs Fleisch'],
+    ['Schneebesen','Drahtquirl für Luftiges'],
+    ['Wiegemesser','Halbmondklinge für Kräuter'],
+    ['Nose to Tail','Alles vom Tier verwerten'],
+    ['Foodtruck','Küche auf vier Rädern'],
+    ['Salzkruste','Garen im Salzmantel']
   ]},
   { id:'film', name:'Film & Serien', words:[
     ['Cliffhanger','Offenes Ende mitten in der Spannung'],
@@ -1030,7 +1112,17 @@ const CATS = [
     ['Oscarrede','Dankesrede bei der Preisverleihung'],
     ['Pilotfolge','Erste Testfolge einer Serie'],
     ['Kinopremiere','Erste öffentliche Vorführung'],
-    ['Abspannszene','Extraszene nach dem Abspann']
+    ['Abspannszene','Extraszene nach dem Abspann'],
+    ['Roter Teppich','Laufsteg der Stars'],
+    ['Filmkuss','Romantik auf Kommando'],
+    ['Sitzriese','Großer Vordermann im Kino'],
+    ['Nachos','Kino-Snack mit Käsesoße'],
+    ['Low Budget','Großes Kino mit kleinem Geld'],
+    ['Outtakes','Pannen, die es nicht in den Film schaffen'],
+    ['Soundtrack','Musik trägt die Szene'],
+    ['Special Effects','Explosionen aus dem Computer'],
+    ['Filmzitat','Satz, den jeder nachspricht'],
+    ['Platzanweiser','Zeigt mit der Taschenlampe den Sitz']
   ]},
   { id:'nachtleben', name:'Feiern & Nachtleben', words:[
     ['Türsteher','Entscheidet, wer reinkommt'],
@@ -1062,7 +1154,17 @@ const CATS = [
     ['Taxistand','Sammelpunkt für die Heimfahrt'],
     ['Katerfrühstück','Deftiges Essen am Tag danach'],
     ['Bierdeckel','Untersetzer fürs Glas'],
-    ['Letzte Runde','Ansage kurz vor Schluss']
+    ['Letzte Runde','Ansage kurz vor Schluss'],
+    ['Discokugel','Spiegelball wirft Lichtpunkte'],
+    ['Freigetränk','Geht aufs Haus'],
+    ['Bierbank','Wackelige Festzeltgarnitur'],
+    ['Schnapsidee','Plan klingt nur betrunken gut'],
+    ['Warteschlange','Geduldsprobe vor der Clubtür'],
+    ['Sperrstunde','Ab jetzt gibt es nichts mehr'],
+    ['Trinkspruch','Kurze Rede vorm Anstoßen'],
+    ['Nachtbus','Letzte Fahrt nach Hause'],
+    ['Discofox','Tanzschritt für Schlagerpartys'],
+    ['Raucherecke','Treffpunkt vor der Tür']
   ]},
   { id:'handwerk', name:'Handwerk & Baustelle', words:[
     ['Wasserwaage','Prüft, ob etwas gerade ist'],
@@ -1094,7 +1196,17 @@ const CATS = [
     ['Fliesenkreuz','Abstandshalter zwischen Fliesen'],
     ['Schleifpapier','Raues Papier zum Glätten'],
     ['Werkbank','Stabiler Arbeitstisch'],
-    ['Sackkarre','Zweirädrige Transportkarre']
+    ['Sackkarre','Zweirädrige Transportkarre'],
+    ['Blaumann','Klassische Arbeitskluft'],
+    ['Richtschnur','Gespannter Faden für die gerade Linie'],
+    ['Schraubzwinge','Hält alles fest zusammen'],
+    ['Bauplan','Zeichnung vom fertigen Haus'],
+    ['Malerkrepp','Klebeband für saubere Kanten'],
+    ['Lehrling','Azubi auf dem Bau'],
+    ['Baugrube','Riesiges Loch vorm Rohbau'],
+    ['Werkzeuggürtel','Alles Wichtige an der Hüfte'],
+    ['Stichsäge','Sägt Kurven ins Brett'],
+    ['Zimmermannsbleistift','Flacher Stift hinterm Ohr']
   ]}
 ];
 
@@ -1264,7 +1376,7 @@ const state = {
   seats: [],
   voice: false,
   pics: false,
-  selected: new Set(CATS.filter(c=>!c.adult).map(c=>c.id)),
+  selected: new Set(CATS.map(c=>c.id)),
   used: {},
   round: 0,
   starter: 0,
@@ -1579,7 +1691,7 @@ function renderReveal(){
   } else {
     s.innerHTML = icon(cat.id,'cat-ic')
       + '<div class="secret-label">Dein Wort</div>'
-      + '<div class="secret-word">' + state.word + '</div>'
+      + '<div class="secret-word' + (state.word.length > 14 ? ' long' : '') + '">' + state.word + '</div>'
       + '<div class="secret-def">' + state.def + '</div>'
       + (state.pics ? '<img class="word-img" src="' + wordImg() + '" alt="" onerror="this.remove()">' : '');
   }
@@ -1710,6 +1822,7 @@ $('btn-solve').onclick = ()=>{
   $('res-ic').innerHTML = icon(cat.id,'stage-ic');
   $('res-cat').textContent  = 'Das Wort · ' + cat.name;
   $('res-word').textContent = state.word;
+  $('res-word').classList.toggle('long', state.word.length > 14);
   $('res-def').textContent  = state.def;
   $('res-fig').innerHTML    = IMP_FIG(76);
   $('res-imp-label').textContent = imps.length > 1 ? 'Die Impostor' : 'Der Impostor';
