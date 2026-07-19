@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Impostor</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============ Brand Core Tokens ============ */
+:root{
+  --bg:#0a0a0a; --surface:#141414; --surface-2:#171717;
+  --line:#262626; --line-soft:#1b1b1b;
+  --ink:#e9e9e9; --ink-strong:#fafafa; --muted:#7c7c7c; --muted-2:#565656;
+  --accent:#8b7ff5; --accent-ink:#b5acf9;
+  --accent-soft:rgba(139,127,245,.12); --accent-edge:rgba(139,127,245,.45);
+  --accent-glow:rgba(139,127,245,.28);
+  --warn:#e0a141; --warn-soft:rgba(224,161,65,.14);
+  --grotesk:'Space Grotesk',system-ui,sans-serif;
+  --mono:'Space Mono',ui-monospace,monospace;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --r-sm:3px; --r-md:6px; --r-lg:10px; --r-pill:999px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--grotesk);
+  -webkit-font-smoothing:antialiased; overscroll-behavior:none; position:relative;
+}
+/* Ambient-Glow oben */
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(90% 45% at 50% -12%, rgba(139,127,245,.13), transparent 62%);
+}
+/* Filmkorn */
+body::after{
+  content:''; position:fixed; inset:-50%; pointer-events:none; z-index:50; opacity:.28;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.app{
+  max-width:520px; margin:0 auto; min-height:100dvh; position:relative; z-index:1;
+  display:flex; flex-direction:column;
+  padding:calc(var(--s4) + env(safe-area-inset-top)) var(--s5) calc(var(--s5) + env(safe-area-inset-bottom));
+  transition:transform .55s cubic-bezier(.45,0,.2,1);
+}
+.app.flip{transform:rotate(180deg)}
+
+/* ============ Header ============ */
+header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding-bottom:var(--s3); border-bottom:1px solid var(--line-soft); margin-bottom:var(--s5);
+}
+.wordmark{font-weight:700; font-size:17px; letter-spacing:.24em; color:var(--ink-strong)}
+.wordmark span{color:var(--accent); display:inline-block; animation:dot 2.6s ease-in-out infinite}
+@keyframes dot{0%,100%{opacity:1}50%{opacity:.35}}
+.hdr-right{display:flex; align-items:center; gap:var(--s4)}
+.readout{font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.14em; text-transform:uppercase}
+.btn-reset{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); background:none; border:none; border-bottom:1px solid var(--line);
+  padding:2px 0 3px; cursor:pointer; transition:color .12s,border-color .12s;
+}
+.btn-reset.arm{color:var(--warn); border-color:var(--warn)}
+.btn-reset[hidden]{display:none}
+
+/* ============ Screens ============ */
+.screen{display:none; flex:1; flex-direction:column}
+.screen.active{display:flex; animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+
+.eyebrow{
+  font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--muted-2);
+}
+.claim{font-size:15px; color:var(--muted); line-height:1.55; margin-bottom:var(--s6)}
+.claim b{color:var(--ink); font-weight:500}
+
+/* ============ Setup ============ */
+.sec{margin-bottom:var(--s6)}
+.sec .eyebrow{display:block; padding-bottom:var(--s2); border-bottom:1px solid var(--line-soft); margin-bottom:var(--s2)}
+.line-row{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
+  padding:var(--s3) 0; border-bottom:1px solid var(--line-soft);
+}
+.line-row:last-child{border-bottom:none}
+.row-label{font-size:15px; font-weight:500; color:var(--ink)}
+.row-sub{font-family:var(--mono); font-size:10px; color:var(--muted-2); margin-top:3px; letter-spacing:.04em}
+
+.stepper{display:flex; align-items:center; gap:var(--s3)}
+.stepper button{
+  width:42px; height:42px; border-radius:var(--r-md);
+  background:var(--surface); border:1px solid var(--line); color:var(--ink);
+  font-family:var(--grotesk); font-size:21px; font-weight:500; cursor:pointer;
+  transition:border-color .12s, box-shadow .12s;
+}
+.stepper button:active{border-color:var(--accent-edge); box-shadow:0 0 16px var(--accent-soft)}
+.stepper button:disabled{opacity:.25}
+.stepper .val{
+  font-family:var(--mono); font-size:18px; font-weight:700; color:var(--accent-ink);
+  min-width:34px; text-align:center; text-shadow:0 0 18px var(--accent-glow);
+}
+
+/* Namensfelder */
+.names{margin-top:var(--s2)}
+.name-field{display:flex; align-items:baseline; gap:var(--s3); padding:var(--s2) 0}
+.name-field .idx{font-family:var(--mono); font-size:11px; color:var(--muted-2); width:20px}
+.name-field input{
+  flex:1; background:none; border:none; border-bottom:1px solid var(--line);
+  color:var(--ink-strong); font-family:var(--grotesk); font-size:16px; padding:4px 0 7px;
+  border-radius:0; outline:none; transition:border-color .15s, box-shadow .15s;
+}
+.name-field input::placeholder{color:var(--muted-2)}
+.name-field input:focus{border-color:var(--accent); box-shadow:0 10px 18px -14px var(--accent-glow)}
+
+/* Toggle */
+.toggle{
+  width:48px; height:27px; border-radius:var(--r-pill);
+  background:var(--surface); border:1px solid var(--line);
+  position:relative; cursor:pointer; flex-shrink:0; transition:border-color .15s, background .15s;
+}
+.toggle::after{
+  content:''; position:absolute; top:4px; left:4px; width:17px; height:17px;
+  border-radius:50%; background:var(--muted-2); transition:transform .18s,background .18s,box-shadow .18s;
+}
+.toggle.on{border-color:var(--accent-edge); background:var(--accent-soft)}
+.toggle.on::after{transform:translateX(21px); background:var(--accent); box-shadow:0 0 12px var(--accent-glow)}
+
+/* Segmented */
+.seg{display:flex; border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; background:var(--surface)}
+.seg button{
+  flex:1; background:none; border:none; color:var(--muted); cursor:pointer;
+  font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  padding:12px 6px; transition:color .12s,background .12s;
+}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button.on{color:var(--ink-strong); background:var(--accent-soft); box-shadow:inset 0 0 22px rgba(139,127,245,.10)}
+.seg-note{font-size:13px; color:var(--muted-2); line-height:1.5; margin-top:var(--s3)}
+
+/* Kategorien: Karten-Grid */
+.cat-actions{display:flex; gap:var(--s4)}
+.cat-actions button{
+  background:none; border:none; font-family:var(--mono); font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2); cursor:pointer;
+}
+.cat-actions button:active{color:var(--accent-ink)}
+.cat-grid{display:grid; grid-template-columns:1fr 1fr; gap:var(--s3)}
+.cat{
+  position:relative; text-align:left;
+  background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--r-lg);
+  padding:var(--s4) var(--s3) var(--s3); min-height:88px; cursor:pointer;
+  display:flex; flex-direction:column; justify-content:flex-end; gap:6px;
+  transition:border-color .15s, background .15s, box-shadow .15s, transform .1s;
+}
+.cat:active{transform:scale(.98)}
+.cat .ic{width:24px; height:24px; color:var(--muted-2); position:absolute; top:var(--s3); left:var(--s3); transition:color .15s}
+.cat .cat-name{font-size:14px; font-weight:500; color:var(--muted); line-height:1.25; transition:color .15s}
+.cat .cat-count{font-family:var(--mono); font-size:10px; color:var(--muted-2); letter-spacing:.06em}
+.cat.sel{
+  background:linear-gradient(180deg, rgba(139,127,245,.16), rgba(139,127,245,.06));
+  border-color:var(--accent-edge);
+  box-shadow:0 0 0 1px rgba(139,127,245,.15), 0 10px 30px -14px var(--accent-glow);
+}
+.cat.sel .ic{color:var(--accent); filter:drop-shadow(0 0 8px var(--accent-glow))}
+.cat.sel .cat-name{color:var(--ink-strong)}
+.tag-18{
+  position:absolute; top:var(--s3); right:var(--s3);
+  font-family:var(--mono); font-size:9px; letter-spacing:.1em; color:var(--warn);
+  border:1px solid rgba(224,161,65,.5); border-radius:var(--r-sm); padding:1px 5px;
+}
+
+/* ============ Buttons ============ */
+.btn{
+  width:100%; min-height:56px; border-radius:var(--r-md); cursor:pointer;
+  font-family:var(--grotesk); font-size:16px; font-weight:600; letter-spacing:.02em;
+  display:flex; align-items:center; justify-content:center; gap:var(--s2);
+  border:1px solid transparent; transition:transform .1s, opacity .12s, box-shadow .15s;
+}
+.btn:active{transform:scale(.98)}
+.btn-accent{
+  background:linear-gradient(180deg, #9a8ff7, var(--accent));
+  color:#0a0a0a;
+  box-shadow:0 12px 34px -12px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.28);
+}
+.btn-quiet{
+  background:none; border-color:var(--line); color:var(--muted);
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; min-height:46px;
+}
+.btn:disabled{opacity:.25; pointer-events:none; box-shadow:none}
+.btn[hidden]{display:none}
+.btn + .btn{margin-top:var(--s3)}
+.actions{margin-top:auto; padding-top:var(--s5)}
+.hint-err{
+  font-family:var(--mono); font-size:10px; color:var(--warn); letter-spacing:.06em;
+  text-align:center; margin-top:var(--s3); min-height:13px;
+}
+.next-hint{
+  font-family:var(--mono); font-size:10px; color:var(--muted-2); letter-spacing:.1em;
+  text-transform:uppercase; text-align:center; margin-bottom:var(--s3);
+}
+
+/* ============ Reveal: Spielkarte ============ */
+.reveal-top{text-align:center; margin-bottom:var(--s4)}
+.player-no{
+  font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--muted-2);
+  text-transform:uppercase; margin-bottom:var(--s2);
+}
+.player-name{font-size:36px; font-weight:700; color:var(--ink-strong); letter-spacing:-.01em}
+.reveal-note{font-size:13px; color:var(--muted); margin-top:var(--s2)}
+
+.card-zone{flex:1; display:flex; align-items:center; justify-content:center; padding:var(--s3) 0}
+.holdcard{
+  position:relative; width:min(78vw,300px); aspect-ratio:5/7;
+  border-radius:14px; border:1px solid var(--line);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52'%3E%3Ctext x='26' y='34' text-anchor='middle' font-family='monospace' font-size='22' fill='rgba(139,127,245,0.07)'%3E%3F%3C/text%3E%3C/svg%3E"),
+    linear-gradient(165deg, #161528, var(--surface) 55%);
+  box-shadow:0 24px 60px -24px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:var(--s3); padding:var(--s5); text-align:center;
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:none;
+  transition:transform .22s cubic-bezier(.3,1.2,.4,1), box-shadow .22s, border-color .22s, background .22s;
+}
+.holdcard::after{
+  content:''; position:absolute; inset:9px; border-radius:9px;
+  border:1px solid var(--line-soft); pointer-events:none; transition:border-color .22s;
+}
+.holdcard.holding{
+  transform:perspective(900px) rotateX(4deg) scale(1.03);
+  border-color:var(--accent-edge);
+  background:linear-gradient(165deg, #1a1930, #14131f 60%);
+  box-shadow:0 30px 70px -22px rgba(0,0,0,.95), 0 0 50px -6px var(--accent-glow);
+}
+.holdcard.holding::after{border-color:rgba(139,127,245,.25)}
+.hold-hint{font-family:var(--mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted)}
+.hold-hint::before{content:'[ '; color:var(--muted-2)} .hold-hint::after{content:' ]'; color:var(--muted-2)}
+.hold-idle .imp-back{margin-bottom:var(--s4); opacity:.5}
+.secret{display:none; flex-direction:column; align-items:center; gap:var(--s3)}
+.holdcard.holding .hold-idle{display:none}
+.holdcard.holding .secret{display:flex; animation:fadeUp .2s ease}
+.secret .cat-ic{width:24px; height:24px; color:var(--accent); filter:drop-shadow(0 0 10px var(--accent-glow))}
+.secret-label{font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted)}
+.secret-word{font-family:var(--mono); font-size:26px; font-weight:700; color:var(--ink-strong); line-height:1.25; word-break:break-word}
+.secret-def{font-size:13.5px; color:var(--muted); line-height:1.5}
+.secret-sub{font-size:13.5px; color:var(--muted); line-height:1.5}
+.secret-sub b{color:var(--accent-ink); font-weight:500; font-family:var(--mono); font-size:12.5px}
+.imp-word{
+  font-family:var(--mono); font-size:21px; font-weight:700; letter-spacing:.3em; margin-left:.3em;
+  color:var(--accent); text-shadow:0 0 24px var(--accent-glow);
+}
+
+/* Impostor-Figur */
+.imp-fig{color:var(--accent); filter:drop-shadow(0 0 18px var(--accent-glow))}
+.float{animation:float 3.2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.imp-fig .eye{transform-box:fill-box; transform-origin:center; animation:blink 4.6s infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%,97%{transform:scaleY(.08)}}
+
+/* ============ Bühne / Durchgänge ============ */
+.big-stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:var(--s4)}
+.stage-eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted)}
+.stage-main{font-size:34px; font-weight:700; color:var(--ink-strong); line-height:1.15; letter-spacing:-.01em}
+.stage-word{
+  font-family:var(--mono); font-size:28px; font-weight:700; color:var(--accent-ink);
+  word-break:break-word; text-shadow:0 0 26px var(--accent-glow);
+}
+.stage-def{font-size:14px; color:var(--muted); line-height:1.5; max-width:290px}
+.stage-sub{font-size:14px; color:var(--muted); line-height:1.6; max-width:300px}
+.stage-sub b{color:var(--ink); font-weight:500}
+.divider{width:56px; height:1px; background:var(--line); margin:var(--s2) 0}
+.stage-ic{width:24px; height:24px; color:var(--accent); filter:drop-shadow(0 0 10px var(--accent-glow))}
+
+.passbar{display:flex; gap:var(--s2); margin-bottom:var(--s2)}
+.pseg{width:36px; height:4px; border-radius:var(--r-pill); background:var(--line); transition:background .25s, box-shadow .25s}
+.pseg.done{background:var(--accent); box-shadow:0 0 12px var(--accent-glow)}
+
+/* Timer-Ring */
+.timer{position:relative; width:112px; height:112px; margin:var(--s2) 0}
+.timer svg{transform:rotate(-90deg); overflow:visible}
+.timer .ring-bg{stroke:var(--line-soft)}
+.timer .ring-fg{
+  stroke:url(#ringGrad); transition:stroke-dashoffset 1s linear;
+  filter:drop-shadow(0 0 8px var(--accent-glow));
+}
+.timer.low .ring-fg{stroke:var(--warn); filter:drop-shadow(0 0 8px rgba(224,161,65,.4))}
+.timer .t-num{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:33px; font-weight:700; color:var(--ink-strong);
+}
+.timer.low .t-num{color:var(--warn)}
+.t-label{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted-2); min-height:13px}
+.t-label.up{color:var(--warn)}
+
+/* ============ Countdown ============ */
+.count-num{
+  font-family:var(--mono); font-size:118px; font-weight:700; color:var(--ink-strong);
+  line-height:1; animation:pop .5s ease; text-shadow:0 0 60px var(--accent-glow);
+}
+.count-go{
+  font-size:33px; font-weight:700; color:var(--accent); letter-spacing:.01em; line-height:1.3;
+  animation:pop .4s ease; text-shadow:0 0 34px var(--accent-glow);
+}
+@keyframes pop{from{transform:scale(1.25);opacity:.3}to{transform:scale(1);opacity:1}}
+
+.res-names{
+  font-size:31px; font-weight:700; color:var(--accent); line-height:1.3;
+  text-shadow:0 0 30px var(--accent-glow);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .app,.screen.active,.count-num,.count-go,.wordmark span,.float,.imp-fig .eye,.holdcard{animation:none; transition:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b5acf9"/><stop offset="1" stop-color="#8b7ff5"/>
+    </linearGradient>
+  </defs>
+</svg>
+<div class="app" id="app">
+  <header>
+    <div class="wordmark">IMPOSTOR<span>.</span></div>
+    <div class="hdr-right">
+      <div class="readout" id="hdr-readout">SETUP</div>
+      <button class="btn-reset" id="btn-reset" hidden>Reset</button>
+    </div>
+  </header>
+
+  <!-- ============ SETUP ============ -->
+  <section class="screen active" id="scr-setup">
+    <p class="claim">Alle kriegen dasselbe Wort – <b>einer nicht</b>. Drei Durchgänge, reihum je ein Hinweis. Dann zeigen alle gleichzeitig auf ihren Verdächtigen.</p>
+
+    <div class="sec">
+      <span class="eyebrow">Spieler</span>
+      <div class="line-row" style="border-bottom:none">
+        <div>
+          <div class="row-label">Anzahl</div>
+          <div class="row-sub">3–20</div>
+        </div>
+        <div class="stepper">
+          <button id="pl-minus" aria-label="Weniger Spieler">−</button>
+          <div class="val" id="pl-val">4</div>
+          <button id="pl-plus" aria-label="Mehr Spieler">+</button>
+        </div>
+      </div>
+      <div class="names" id="names"></div>
+    </div>
+
+    <div class="sec">
+      <span class="eyebrow">Spiel</span>
+      <div class="line-row">
+        <div>
+          <div class="row-label">Impostor</div>
+          <div class="row-sub" id="imp-sub">max. 1</div>
+        </div>
+        <div class="stepper">
+          <button id="im-minus" aria-label="Weniger Impostor">−</button>
+          <div class="val" id="im-val">1</div>
+          <button id="im-plus" aria-label="Mehr Impostor">+</button>
+        </div>
+      </div>
+      <div class="line-row">
+        <div>
+          <div class="row-label">Impostor sieht die Kategorie</div>
+          <div class="row-sub">Leichter zu bluffen</div>
+        </div>
+        <div class="toggle on" id="tg-hint" role="switch" aria-checked="true"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <span class="eyebrow">Handy auf dem Tisch</span>
+      <div class="seg" id="seg-table">
+        <button data-mode="flip" class="on">Liegt · 2 gegenüber 2</button>
+        <button data-mode="static">Wandert · runder Tisch</button>
+      </div>
+      <div class="seg-note" id="seg-note">Der Bildschirm dreht sich automatisch zur Tischseite des Spielers, der gerade dran ist – erste Hälfte diesseits, zweite Hälfte gegenüber.</div>
+    </div>
+
+    <div class="sec">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:var(--s2);border-bottom:1px solid var(--line-soft);margin-bottom:var(--s3)">
+        <span class="eyebrow" style="border:none;padding:0;margin:0">Kategorien</span>
+        <div class="cat-actions">
+          <button id="cat-all">Alle</button>
+          <button id="cat-none">Keine</button>
+        </div>
+      </div>
+      <div class="cat-grid" id="cat-grid"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-quiet" id="btn-resume" hidden>Runde fortsetzen</button>
+      <button class="btn btn-accent" id="btn-start">Los geht's</button>
+      <div class="hint-err" id="setup-err"></div>
+    </div>
+  </section>
+
+  <!-- ============ REVEAL ============ -->
+  <section class="screen" id="scr-reveal">
+    <div class="reveal-top">
+      <div class="player-no" id="rv-count">1 / 4</div>
+      <div class="player-name" id="rv-name">Spieler 1</div>
+      <div class="reveal-note">Nur du guckst. Alle anderen: Augen weg.</div>
+    </div>
+
+    <div class="card-zone">
+      <div class="holdcard" id="holdcard">
+        <div class="hold-idle">
+          <div class="imp-back" id="imp-back"></div>
+          <div class="hold-hint">Gedrückt halten</div>
+        </div>
+        <div class="secret" id="secret"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="next-hint" id="rv-next-hint"></div>
+      <button class="btn btn-accent" id="btn-next" disabled>Weitergeben</button>
+    </div>
+  </section>
+
+  <!-- ============ DURCHGÄNGE ============ -->
+  <section class="screen" id="scr-play">
+    <div class="big-stage">
+      <div class="passbar" id="passbar">
+        <div class="pseg"></div><div class="pseg"></div><div class="pseg"></div>
+      </div>
+      <div class="stage-eyebrow" id="play-eyebrow">Durchgang 1 von 3</div>
+      <div class="stage-main" id="play-name">Spieler 1</div>
+      <div class="timer" id="timer">
+        <svg width="112" height="112" viewBox="0 0 112 112">
+          <circle class="ring-bg" cx="56" cy="56" r="49" fill="none" stroke-width="3"/>
+          <circle class="ring-fg" id="ring" cx="56" cy="56" r="49" fill="none" stroke-width="3"
+                  stroke-linecap="round" stroke-dasharray="308" stroke-dashoffset="0"/>
+        </svg>
+        <div class="t-num" id="t-num">15</div>
+      </div>
+      <div class="t-label" id="t-label">Ein Hinweis · ein Wort</div>
+      <div class="stage-sub" id="play-sub"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-accent" id="btn-pass-next">Weiter</button>
+    </div>
+  </section>
+
+  <!-- ============ ABSTIMMUNG / COUNTDOWN ============ -->
+  <section class="screen" id="scr-vote">
+    <div class="big-stage" id="vote-stage"></div>
+    <div class="actions">
+      <button class="btn btn-accent" id="btn-count">Countdown starten</button>
+      <button class="btn btn-accent" id="btn-solve" hidden>Auflösen</button>
+    </div>
+  </section>
+
+  <!-- ============ AUFLÖSUNG ============ -->
+  <section class="screen" id="scr-result">
+    <div class="big-stage">
+      <span class="stage-ic" id="res-ic"></span>
+      <div class="stage-eyebrow" id="res-cat">Kategorie</div>
+      <div class="stage-word" id="res-word">Wort</div>
+      <div class="stage-def" id="res-def"></div>
+      <div class="divider"></div>
+      <span id="res-fig" class="float"></span>
+      <div class="stage-eyebrow">Impostor war</div>
+      <div class="res-names" id="res-imp">–</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-accent" id="btn-again">Nächste Runde</button>
+      <button class="btn btn-quiet" id="btn-newgame">Neues Spiel</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ==================== ICONS (1.5px Line-Art) ==================== */
+const IC = {
+  sex:'<path d="M12 20C4.5 14.5 3.5 8.5 7 6.4 9.7 4.8 12 7.4 12 7.4S14.3 4.8 17 6.4c3.5 2.1 2.5 8.1-5 13.6Z"/>',
+  landwirtschaft:'<path d="M12 21V7"/><path d="M12 8C9.2 8 8 6.2 8 3.8 10.4 3.8 12 5.2 12 8Z"/><path d="M12 8c2.8 0 4-1.8 4-4.2C13.6 3.8 12 5.2 12 8Z"/><path d="M12 13c-2.8 0-4-1.8-4-4.2 2.4 0 4 1.4 4 4.2Z"/><path d="M12 13c2.8 0 4-1.8 4-4.2-2.4 0-4 1.4-4 4.2Z"/>',
+  fotografie:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 3.5V9M20.5 12H15M12 20.5V15M3.5 12H9"/>',
+  staedte:'<path d="M3 20h18"/><path d="M4 20v-8h4v8M10 20V5h4v15M16 20v-10h4v10"/>',
+  musik:'<circle cx="8" cy="18" r="2.6"/><path d="M10.6 18V4.5l7-1.4v11"/><circle cx="15" cy="16.6" r="2.6"/>',
+  technologie:'<rect x="7" y="7" width="10" height="10" rx="1"/><rect x="10.5" y="10.5" width="3" height="3"/><path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3"/>',
+  outdoor:'<path d="M3 19.5 9.5 7.5l3.4 6 2.6-4.3L21 19.5H3Z"/>',
+  kueche:'<path d="M5 10h14v6.5a3.5 3.5 0 0 1-3.5 3.5h-7A3.5 3.5 0 0 1 5 16.5V10Z"/><path d="M3 12.5h2M19 12.5h2M9.5 3.5c0 1.6 1 1.6 1 3.2M13.5 3.5c0 1.6 1 1.6 1 3.2"/>',
+  film:'<path d="M4 10.5h16V20H4v-9.5Z"/><path d="M4.3 9.8 5 5.4l15.4 2.4-.6 3.4"/><path d="M8 5.9l1.7 3M12.8 6.6l1.7 3"/>',
+  nachtleben:'<path d="M4.5 4.5h15L12 12.8v6.7"/><path d="M8 21h8M7 7.2h10"/>',
+  handwerk:'<path d="M13.2 4.6 19.4 10.8 17.5 12.7 11.3 6.5Z"/><path d="M11.8 9.5 4.6 16.7a1.55 1.55 0 0 0 2.2 2.2l7.2-7.2"/>'
+};
+const icon = (id,cls)=>'<svg class="'+(cls||'ic')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+IC[id]+'</svg>';
+
+/* Impostor-Figur (Cartoon, Line-Art, blinzelnd) */
+const IMP_FIG = (s,cls)=>'<svg class="imp-fig '+(cls||'')+'" width="'+s+'" height="'+s+'" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+  +'<circle cx="60" cy="66" r="26"/>'
+  +'<path d="M38 52c0-15 8-24 22-24s22 9 22 24" fill="#141414"/>'
+  +'<path d="M28 53c8 5 20 7 32 7s24-2 32-7"/>'
+  +'<rect x="40" y="58" width="40" height="13" rx="6.5" fill="rgba(139,127,245,.15)"/>'
+  +'<circle class="eye" cx="51" cy="64.5" r="2.2" fill="currentColor" stroke="none"/>'
+  +'<circle class="eye" cx="69" cy="64.5" r="2.2" fill="currentColor" stroke="none"/>'
+  +'<path d="M53 80c2.5 2.5 5 3 8.5 1.5"/>'
+  +'<path d="M44 90l16 13 16-13"/>'
+  +'<path d="M92 30c0-5 8-6 8-1 0 3.5-4 3.5-4 6.5" stroke-width="2.2"/>'
+  +'<circle cx="96" cy="40.5" r="1.4" fill="currentColor" stroke="none"/>'
+  +'</svg>';
+
+/* ==================== WORTPOOLS: [Begriff, Kurzdefinition] ==================== */
+const CATS = [
+  { id:'sex', name:'Sex & Erotik', adult:true, words:[
+    ['Quickie','Schneller, spontaner Sex zwischendurch'],
+    ['Dirty Talk','Anzügliches Reden beim Sex'],
+    ['Vorspiel','Erotisches Aufwärmen vor dem Sex'],
+    ['Rollenspiel','Sex mit verteilten Fantasie-Rollen'],
+    ['Handschellen','Fesseln fürs Schlafzimmer'],
+    ['Striptease','Erotisches Ausziehen zur Musik'],
+    ['Lapdance','Erotischer Tanz auf dem Schoß'],
+    ['Dessous','Edle, reizvolle Unterwäsche'],
+    ['One-Night-Stand','Sex für eine einzige Nacht'],
+    ['Friends with Benefits','Freundschaft mit Sex, ohne Beziehung'],
+    ['Sexting','Erotische Nachrichten und Fotos schicken'],
+    ['Walk of Shame','Heimweg am Morgen danach'],
+    ['Morgensex','Sex direkt nach dem Aufwachen'],
+    ['Kamasutra','Indisches Buch der Liebesstellungen'],
+    ['Massageöl','Öl für sinnliche Massagen'],
+    ['Swingerclub','Club für Partnertausch'],
+    ['Bettgeflüster','Intime Gespräche im Bett'],
+    ['Knutschfleck','Saugmal am Hals'],
+    ['Seitensprung','Heimlicher Sex außerhalb der Beziehung'],
+    ['Dreier','Sex zu dritt'],
+    ['Fesselspiele','Den Partner beim Sex fixieren'],
+    ['Vibrator','Vibrierendes Sexspielzeug'],
+    ['Gleitgel','Gel für reibungslosen Sex'],
+    ['Reiterstellung','Position, bei der ein Partner obenauf sitzt'],
+    ['Löffelchen','Sexposition seitlich hintereinander'],
+    ['Kondomautomat','Automat für Verhütungsmittel'],
+    ['Rotlichtviertel','Stadtviertel mit käuflicher Liebe'],
+    ['Peepshow','Gucklochkabine mit Nacktshow'],
+    ['FKK-Strand','Strand für Nacktbadende'],
+    ['Sextape','Privates Video beim Sex'],
+    ['Stripclub','Lokal mit Ausziehshows'],
+    ['Aphrodisiakum','Mittel, das die Lust steigern soll']
+  ]},
+  { id:'landwirtschaft', name:'Landwirtschaft', words:[
+    ['Mähdrescher','Erntemaschine für Getreide'],
+    ['Güllefass','Anhänger zum Ausbringen von Gülle'],
+    ['Fruchtfolge','Jährlicher Wechsel der Anbaupflanzen'],
+    ['Melkroboter','Automat, der Kühe melkt'],
+    ['Silage','Vergorenes Futter aus Gras oder Mais'],
+    ['Raps','Gelb blühende Ölpflanze'],
+    ['Hofladen','Direktverkauf am Bauernhof'],
+    ['Schweinemast','Aufzucht von Schweinen zur Schlachtung'],
+    ['Kreiselegge','Gerät zur Bodenlockerung vor der Saat'],
+    ['Stoppelfeld','Abgeerntetes Getreidefeld'],
+    ['Biogasanlage','Erzeugt Energie aus Gülle und Mais'],
+    ['Weidezaun','Oft elektrischer Zaun ums Grasland'],
+    ['Erntehelfer','Saisonkraft für die Ernte'],
+    ['Saatgut','Samen für die Aussaat'],
+    ['Heuballen','Gepresstes, getrocknetes Gras'],
+    ['Direktvermarktung','Verkauf ohne Zwischenhandel'],
+    ['Flurbereinigung','Neuordnung landwirtschaftlicher Flächen'],
+    ['Zuckerrübe','Rübe zur Zuckergewinnung'],
+    ['Spargelstechen','Spargelernte per Hand'],
+    ['Landjugend','Jugendverband auf dem Dorf'],
+    ['Scheunenfest','Party in der Scheune'],
+    ['Melkstand','Anlage zum Melken der Kühe'],
+    ['Körnermais','Mais, geerntet für die Körner'],
+    ['Ferkel','Junges Schwein'],
+    ['Agrarförderung','Subventionen für Landwirte'],
+    ['Pflanzenschutzmittel','Spritzmittel gegen Schädlinge und Unkraut'],
+    ['Ackerfurche','Rille im gepflügten Feld'],
+    ['Traktorreifen','Großer Reifen mit grobem Profil'],
+    ['Milchtankstelle','Automat für frische Rohmilch'],
+    ['Wildschaden','Flurschaden durch Wildschweine und Co.'],
+    ['Jauchegrube','Sammelbecken für flüssigen Mist']
+  ]},
+  { id:'fotografie', name:'Fotografie', words:[
+    ['Blende','Öffnung im Objektiv, regelt das Licht'],
+    ['Verschlusszeit','Wie lange der Sensor belichtet wird'],
+    ['Bokeh','Ästhetische Unschärfe im Hintergrund'],
+    ['Weißabgleich','Farbkorrektur je nach Lichtquelle'],
+    ['RAW-Datei','Unbearbeitetes Rohdatenformat der Kamera'],
+    ['Polfilter','Filter gegen Spiegelungen und Reflexe'],
+    ['Langzeitbelichtung','Sekunden- bis minutenlange Belichtung'],
+    ['Histogramm','Diagramm der Helligkeitsverteilung'],
+    ['Tiefenschärfe','Bereich, der im Bild scharf ist'],
+    ['Available Light','Fotografieren nur mit vorhandenem Licht'],
+    ['Tethering','Kamera direkt am Rechner auslösen'],
+    ['Colorgrading','Farblook in der Nachbearbeitung'],
+    ['Hohlkehle','Fugenloser, runder Studiohintergrund'],
+    ['Lichtformer','Aufsatz, der Blitzlicht formt'],
+    ['Beauty Dish','Runder Lichtformer für Porträts'],
+    ['Graufilter','Dunkelt ab für lange Belichtungen'],
+    ['Fokus-Stacking','Mehrere Schärfeebenen zu einem Bild'],
+    ['Doppelbelichtung','Zwei Bilder in einer Aufnahme'],
+    ['Goldene Stunde','Weiches Licht kurz nach Sonnenauf- oder -untergang'],
+    ['Teleobjektiv','Objektiv mit langer Brennweite'],
+    ['Fisheye','Extremes Weitwinkel mit runder Verzerrung'],
+    ['Kontaktabzug','Übersichtsprint aller Negative'],
+    ['Dunkelkammer','Raum zur analogen Filmentwicklung'],
+    ['Sensorreinigung','Staub vom Kamerasensor entfernen'],
+    ['Bildrauschen','Körnung bei hoher ISO'],
+    ['Überbelichtung','Das Bild ist zu hell'],
+    ['Goldener Schnitt','Klassische Bildaufteilungsregel'],
+    ['Selbstauslöser','Kamera löst zeitverzögert aus'],
+    ['Blitzsynchronzeit','Kürzeste Verschlusszeit für Blitzaufnahmen'],
+    ['Stativkopf','Bewegliches Gelenk auf dem Stativ'],
+    ['Chromatische Aberration','Farbsäume an Kontrastkanten']
+  ]},
+  { id:'staedte', name:'Städte', words:[
+    ['Reykjavik','Hauptstadt von Island'],
+    ['Marrakesch','Königsstadt in Marokko'],
+    ['Sarajevo','Hauptstadt von Bosnien-Herzegowina'],
+    ['Tallinn','Hauptstadt von Estland'],
+    ['Montevideo','Hauptstadt von Uruguay'],
+    ['Kyoto','Alte Kaiserstadt in Japan'],
+    ['Sevilla','Stadt in Andalusien, Spanien'],
+    ['Krakau','Alte Königsstadt in Polen'],
+    ['Ljubljana','Hauptstadt von Slowenien'],
+    ['Porto','Hafenstadt in Portugal, Heimat des Portweins'],
+    ['Antwerpen','Diamantenstadt in Belgien'],
+    ['Bergen','Fjordstadt in Norwegen'],
+    ['Valletta','Hauptstadt von Malta'],
+    ['Tiflis','Hauptstadt von Georgien'],
+    ['Havanna','Hauptstadt von Kuba'],
+    ['Kapstadt','Stadt am Tafelberg, Südafrika'],
+    ['Wellington','Hauptstadt von Neuseeland'],
+    ['Vancouver','Pazifikstadt in Kanada'],
+    ['Cartagena','Karibikstadt in Kolumbien'],
+    ['Busan','Hafenstadt in Südkorea'],
+    ['Bologna','Universitätsstadt in Italien'],
+    ['Gent','Altstadtperle in Belgien'],
+    ['Aarhus','Zweitgrößte Stadt Dänemarks'],
+    ['Innsbruck','Alpenstadt in Tirol, Österreich'],
+    ['Leipzig','Messestadt in Sachsen'],
+    ['Flensburg','Stadt an der dänischen Grenze, Punktekartei'],
+    ['Görlitz','Östlichste Stadt Deutschlands'],
+    ['Heidelberg','Schloss- und Unistadt am Neckar'],
+    ['Chiang Mai','Tempelstadt in Nordthailand'],
+    ['Münster','Fahrradstadt in Westfalen'],
+    ['Salzburg','Mozartstadt in Österreich']
+  ]},
+  { id:'musik', name:'Musik', words:[
+    ['Falsett','Künstlich hohe Kopfstimme'],
+    ['A cappella','Gesang ganz ohne Instrumente'],
+    ['Playback','Singen zu vorproduziertem Ton'],
+    ['Riff','Prägnante, wiederholte Gitarrenfigur'],
+    ['Metronom','Taktgeber zum Üben'],
+    ['Kontrabass','Das größte Streichinstrument'],
+    ['Synthesizer','Elektronisches Tasteninstrument'],
+    ['Mixtape','Selbst zusammengestellte Songsammlung'],
+    ['Refrain','Wiederkehrender Kernteil eines Songs'],
+    ['Bridge','Übergangsteil vor dem letzten Refrain'],
+    ['Autotune','Software zur Tonhöhenkorrektur'],
+    ['Unplugged','Konzert ohne elektrische Verstärkung'],
+    ['Jam-Session','Freies, spontanes Zusammenspiel'],
+    ['Kapodaster','Klemme am Gitarrenhals'],
+    ['Plattenspieler','Abspielgerät für Vinyl'],
+    ['Loop-Station','Gerät, das Aufnahmen live schleift'],
+    ['Beatboxing','Schlagzeug mit dem Mund imitieren'],
+    ['Oktave','Abstand von acht Tönen'],
+    ['Crescendo','Allmählich lauter werden'],
+    ['Tourbus','Bus einer Band auf Tour'],
+    ['Roadie','Helfer für Bühnenauf- und -abbau'],
+    ['Soundcheck','Tonprobe vor dem Konzert'],
+    ['Zugabe','Extrasongs nach dem Konzertende'],
+    ['One-Hit-Wonder','Künstler mit genau einem Hit'],
+    ['Coversong','Neuinterpretation eines fremden Songs'],
+    ['Notenschlüssel','Zeichen am Anfang der Notenzeile'],
+    ['Dirigent','Leitet das Orchester'],
+    ['Tonleiter','Tonfolge, zum Beispiel C-Dur'],
+    ['Airplay','Einsätze eines Songs im Radio'],
+    ['Chartstürmer','Song, der schnell die Charts erklimmt'],
+    ['Vinylpressung','Herstellung einer Schallplatte']
+  ]},
+  { id:'technologie', name:'Technologie', words:[
+    ['Firewall','Schutzwall gegen Netzwerkangriffe'],
+    ['Algorithmus','Schritt-für-Schritt-Rechenvorschrift'],
+    ['Blockchain','Dezentrale, fälschungssichere Datenkette'],
+    ['Neuronales Netz','Lernendes System nach Hirnvorbild'],
+    ['Quantencomputer','Rechner auf Basis von Quantenbits'],
+    ['Open Source','Software mit offenem Quellcode'],
+    ['Zwei-Faktor-Authentifizierung','Login mit zweitem Bestätigungsschritt'],
+    ['Phishing','Datenklau über gefälschte Mails'],
+    ['VPN','Verschlüsselter Tunnel ins Internet'],
+    ['Bandbreite','Datendurchsatz einer Leitung'],
+    ['Serverfarm','Halle voller Rechner'],
+    ['Deepfake','Täuschend echtes KI-Fälschungsvideo'],
+    ['Kryptowährung','Digitales Geld wie Bitcoin'],
+    ['3D-Drucker','Druckt Objekte Schicht für Schicht'],
+    ['Augmented Reality','Digitale Ebene über der echten Welt'],
+    ['Router','Verteilt das Internet im Haushalt'],
+    ['Darknet','Anonymer, versteckter Teil des Internets'],
+    ['Captcha','Test, ob man ein Mensch ist'],
+    ['Firmware','Fest eingebaute Gerätesoftware'],
+    ['Beta-Version','Testversion vor dem Release'],
+    ['Screenshot','Foto vom Bildschirm'],
+    ['Cloud-Speicher','Dateien auf fremden Servern'],
+    ['Betriebssystem','Grundsoftware wie Windows oder iOS'],
+    ['Prompt','Texteingabe an eine KI'],
+    ['Chatbot','Programm, das Gespräche führt'],
+    ['Bug-Report','Fehlermeldung an die Entwickler'],
+    ['Silicon Valley','Tech-Region bei San Francisco'],
+    ['Startup-Pitch','Kurzpräsentation einer Geschäftsidee'],
+    ['Softwareupdate','Aktualisierung eines Programms'],
+    ['Glasfaser','Schnellste Internetleitung'],
+    ['Jailbreak','Entsperren gesperrter Gerätesoftware']
+  ]},
+  { id:'outdoor', name:'Berge & Outdoor', words:[
+    ['Klettersteig','Gesicherte Route mit Stahlseil'],
+    ['Gipfelkreuz','Kreuz auf dem Berggipfel'],
+    ['Biwak','Notlager im Freien, ohne Zelt'],
+    ['Thermik','Aufsteigende Warmluft zum Gleiten'],
+    ['Höhenmeter','Vertikal zurückgelegte Meter'],
+    ['Serpentinen','Enge Kehren am Berg'],
+    ['Murmeltier','Pfeifender Alpennager'],
+    ['Almhütte','Bewirtschaftete Hütte am Berg'],
+    ['Blasenpflaster','Spezialpflaster für Wanderfüße'],
+    ['Trekkingstock','Stock zur Entlastung beim Wandern'],
+    ['Gletscherspalte','Tiefer Riss im Eis'],
+    ['Lawinenwarnstufe','Skala für die Lawinengefahr'],
+    ['Seilbahn','Gondel auf den Berg'],
+    ['Kompass','Zeigt die Himmelsrichtung'],
+    ['Trinkblase','Wassersack mit Schlauch im Rucksack'],
+    ['Funktionsjacke','Atmungsaktive Wetterjacke'],
+    ['Zelthering','Metallstift zur Zeltbefestigung'],
+    ['Lagerfeuer','Offenes Feuer im Camp'],
+    ['Stirnlampe','Lampe für den Kopf'],
+    ['Wetterumschwung','Plötzlicher Wetterwechsel am Berg'],
+    ['Steigeisen','Zacken unter den Schuhen fürs Eis'],
+    ['Wanderkarte','Topografische Karte für Touren'],
+    ['Hüttenschlafsack','Dünner Schlafsack für Berghütten'],
+    ['Gipfelschnaps','Schnaps zur Gipfelfeier'],
+    ['Talstation','Untere Station der Seilbahn'],
+    ['Geröllfeld','Loses Gestein am Hang'],
+    ['Weitwanderweg','Mehrtägige Fernwanderroute'],
+    ['Bergwacht','Rettungsdienst in den Bergen'],
+    ['Schneefeld','Schneerest am Sommerhang'],
+    ['Panoramaweg','Wanderweg mit Aussicht']
+  ]},
+  { id:'kueche', name:'Küche & Kochen', words:[
+    ['Sous-vide','Garen im Vakuumbeutel bei Niedrigtemperatur'],
+    ['Umami','Der herzhafte fünfte Geschmackssinn'],
+    ['Mise en place','Alles vorbereitet, bevor gekocht wird'],
+    ['Röstaromen','Geschmack durch scharfes Anbraten'],
+    ['Julienne','Gemüse in feinste Streifen geschnitten'],
+    ['Fond','Konzentrierte Grundbrühe für Saucen'],
+    ['Blanchieren','Kurz kochen, dann eiskalt abschrecken'],
+    ['Fermentieren','Haltbarmachen durch Gärung'],
+    ['Sauerteig','Natürlicher Trieb für Brotteig'],
+    ['Gusseisenpfanne','Schwere Eisenpfanne für scharfes Braten'],
+    ['Flambieren','Mit Alkohol abbrennen'],
+    ['Reduktion','Eine Sauce einkochen lassen'],
+    ['Amuse-Gueule','Kleiner Gruß aus der Küche'],
+    ['Konfieren','Langsam in Fett garen'],
+    ['Emulsion','Verbindung von Fett und Flüssigkeit'],
+    ['Tranchieren','Den Braten fachgerecht aufschneiden'],
+    ['Aioli','Knoblauchmayonnaise'],
+    ['Ceviche','Roher Fisch, in Limette gegart'],
+    ['Tatar','Gehacktes rohes Fleisch'],
+    ['Schnellkochtopf','Topf, der unter Druck gart'],
+    ['Kräuterbutter','Butter mit frischen Kräutern'],
+    ['Niedrigtemperatur','Fleisch stundenlang schonend garen'],
+    ['Panade','Hülle aus Mehl, Ei und Bröseln'],
+    ['Schmorgericht','Langes Garen in Flüssigkeit'],
+    ['Wok','Asiatische Hochrandpfanne'],
+    ['Zesten','Feine Streifen Zitrusschale'],
+    ['Karamellisieren','Zucker braun schmelzen lassen'],
+    ['Vinaigrette','Salatsauce aus Essig und Öl'],
+    ['Brühwürfel','Gepresste Instantbrühe'],
+    ['Resteessen','Gericht aus Übriggebliebenem']
+  ]},
+  { id:'film', name:'Film & Serien', words:[
+    ['Cliffhanger','Offenes Ende mitten in der Spannung'],
+    ['Plot Twist','Überraschende Wendung der Handlung'],
+    ['Spoiler','Verrät die Handlung vorab'],
+    ['Drehbuch','Geschriebene Vorlage des Films'],
+    ['Stuntdouble','Ersatz für gefährliche Szenen'],
+    ['Greenscreen','Grüne Wand für digitale Hintergründe'],
+    ['Abspann','Namensliste am Filmende'],
+    ['Blockbuster','Teurer Kassenschlager'],
+    ['Binge-Watching','Viele Folgen am Stück schauen'],
+    ['Synchronsprecher','Spricht die deutsche Stimme'],
+    ['Filmklappe','Klappe vor jeder Szene'],
+    ['Casting','Auswahl der Schauspieler'],
+    ['Kamerafahrt','Bewegte Kameraeinstellung'],
+    ['Zeitlupe','Stark verlangsamte Bewegung'],
+    ['Voice-over','Erzählstimme aus dem Off'],
+    ['Prequel','Die Vorgeschichte eines Films'],
+    ['Making-of','Doku über die Dreharbeiten'],
+    ['Arthouse','Anspruchsvolles Programmkino'],
+    ['Popcornkino','Leichte Unterhaltung fürs große Publikum'],
+    ['Regiestuhl','Klappstuhl mit Namen drauf'],
+    ['Statist','Darsteller ohne Text im Hintergrund'],
+    ['Kinotrailer','Vorschau auf einen Film'],
+    ['Filmfestival','Wettbewerb wie Cannes oder die Berlinale'],
+    ['Drehort','Ort, an dem gefilmt wird'],
+    ['Maskenbildner','Zuständig für Make-up und Masken'],
+    ['Kulisse','Gebaute Filmumgebung'],
+    ['Oscarrede','Dankesrede bei der Preisverleihung'],
+    ['Pilotfolge','Erste Testfolge einer Serie'],
+    ['Kinopremiere','Erste öffentliche Vorführung'],
+    ['Abspannszene','Extraszene nach dem Abspann']
+  ]},
+  { id:'nachtleben', name:'Feiern & Nachtleben', words:[
+    ['Türsteher','Entscheidet, wer reinkommt'],
+    ['Kater','Der Zustand am Morgen danach'],
+    ['Absacker','Letzter Drink des Abends'],
+    ['Vorglühen','Trinken, bevor es losgeht'],
+    ['Flunkyball','Trinkspiel mit Ball und Flaschen'],
+    ['Karaoke','Singen zu Playback vor Publikum'],
+    ['Bierpong','Trinkspiel mit Bechern und Tischtennisball'],
+    ['Afterparty','Weiterfeiern nach der Party'],
+    ['Garderobenmarke','Nummer für die abgegebene Jacke'],
+    ['DJ-Pult','Arbeitsplatz des DJs'],
+    ['Einlassstempel','Stempel auf der Hand am Eingang'],
+    ['Dönerbude','Anlaufstelle nach dem Feiern'],
+    ['Happy Hour','Zeit mit günstigen Drinks'],
+    ['Longdrink','Spirituose mit Filler im hohen Glas'],
+    ['Tresen','Die Theke in der Bar'],
+    ['Stammtisch','Fester Tisch, feste Runde'],
+    ['Junggesellenabschied','Letzte Party vor der Hochzeit'],
+    ['Polonaise','Tanzschlange durch den Raum'],
+    ['Konfetti','Buntes Papiergeschnipsel'],
+    ['Tanzfläche','Der Bereich zum Tanzen'],
+    ['Gästeliste','Liste für freien Einlass'],
+    ['Barhocker','Hoher Sitz am Tresen'],
+    ['Kronkorken','Verschluss der Bierflasche'],
+    ['Filmriss','Erinnerungslücke nach zu viel Alkohol'],
+    ['Kneipenquiz','Ratespiel im Wirtshaus'],
+    ['Shotglas','Kleines Glas für Kurze'],
+    ['Taxistand','Sammelpunkt für die Heimfahrt'],
+    ['Katerfrühstück','Deftiges Essen am Tag danach'],
+    ['Bierdeckel','Untersetzer fürs Glas'],
+    ['Letzte Runde','Ansage kurz vor Schluss']
+  ]},
+  { id:'handwerk', name:'Handwerk & Baustelle', words:[
+    ['Wasserwaage','Prüft, ob etwas gerade ist'],
+    ['Dübel','Halt für Schrauben in der Wand'],
+    ['Richtfest','Feier zum fertigen Rohbau'],
+    ['Akkuschrauber','Kabelloses Schraubgerät'],
+    ['Gehrungssäge','Sägt exakte Winkel'],
+    ['Spachtelmasse','Füllt Löcher und Fugen'],
+    ['Estrich','Bodenschicht unter dem Belag'],
+    ['Dachlatte','Schmale Holzlatte fürs Dach'],
+    ['Zollstock','Klappbarer Meterstab'],
+    ['Bauschaum','Expandierender Montageschaum'],
+    ['Rigipsplatte','Gipskartonplatte für Wände'],
+    ['Kabeltrommel','Aufgerolltes Verlängerungskabel'],
+    ['Meisterbrief','Urkunde der Meisterprüfung'],
+    ['Baustellenradio','Robustes Radio für den Bau'],
+    ['Gerüst','Arbeitsplattform an der Fassade'],
+    ['Silikonfuge','Elastische Dichtfuge im Bad'],
+    ['Grundierung','Erste Schicht vorm Streichen'],
+    ['Flex','Winkelschleifer zum Trennen'],
+    ['Stemmeisen','Meißel für Holzarbeiten'],
+    ['Maurerkelle','Werkzeug zum Mörtelauftragen'],
+    ['Senklot','Schnur mit Gewicht für die Senkrechte'],
+    ['Schalung','Form für flüssigen Beton'],
+    ['Bauhelm','Kopfschutz auf der Baustelle'],
+    ['Betonmischer','Trommel zum Anmischen von Beton'],
+    ['Feierabendbier','Bier nach getaner Arbeit'],
+    ['Absperrband','Rot-weißes Flatterband'],
+    ['Fliesenkreuz','Abstandshalter zwischen Fliesen'],
+    ['Schleifpapier','Raues Papier zum Glätten'],
+    ['Werkbank','Stabiler Arbeitstisch'],
+    ['Sackkarre','Zweirädrige Transportkarre']
+  ]}
+];
+
+/* ==================== STORAGE (Feature-Detection) ==================== */
+const store = (()=>{ try{ const t='__t'; localStorage.setItem(t,'1'); localStorage.removeItem(t); return localStorage; }catch(e){ return null; } })();
+const SAVE_KEY = 'impostor_v4';
+
+/* ==================== STATE ==================== */
+const PASS_SECONDS = 15;
+const state = {
+  players: 4,
+  names: [],
+  impostors: 1,
+  impostorHint: true,
+  tableMode: 'flip',
+  selected: new Set(CATS.filter(c=>!c.adult).map(c=>c.id)),
+  used: {},
+  round: 0,
+  starter: 0,
+  playStep: 0,
+  roles: [], word:'', def:'', catId:null, revealIdx:0,
+  screen: 'scr-setup'
+};
+CATS.forEach(c=>state.used[c.id]=new Set());
+
+/* ==================== HELPERS ==================== */
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random()*n);
+const maxImp = () => Math.min(3, Math.floor((state.players-1)/2)) || 1;
+const catById = id => CATS.find(c=>c.id===id);
+const pname = i => (state.names[i]||'').trim() || ('Spieler '+(i+1));
+let timers = [];
+function clearTimers(){ timers.forEach(t=>{clearTimeout(t);clearInterval(t);}); timers=[]; }
+
+function save(){
+  if(!store) return;
+  try{
+    store.setItem(SAVE_KEY, JSON.stringify({
+      players:state.players, names:state.names, impostors:state.impostors,
+      impostorHint:state.impostorHint, tableMode:state.tableMode,
+      selected:[...state.selected],
+      used:Object.fromEntries(CATS.map(c=>[c.id,[...state.used[c.id]]])),
+      round:state.round, starter:state.starter, playStep:state.playStep,
+      roles:state.roles, word:state.word, def:state.def, catId:state.catId,
+      revealIdx:state.revealIdx, screen:state.screen
+    }));
+  }catch(e){}
+}
+function loadSave(){
+  if(!store) return null;
+  try{ const raw = store.getItem(SAVE_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function clearSave(){ if(store){ try{ store.removeItem(SAVE_KEY); }catch(e){} } }
+
+function applyFlip(playerIdx){
+  const flip = state.tableMode==='flip' && playerIdx >= Math.ceil(state.players/2);
+  $('app').classList.toggle('flip', flip);
+}
+function show(id, readout){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+  $('hdr-readout').textContent = readout;
+  $('btn-reset').hidden = (id === 'scr-setup');
+  if(id==='scr-setup' || id==='scr-vote' || id==='scr-result') $('app').classList.remove('flip');
+  disarmReset();
+  state.screen = id;
+  save();
+  window.scrollTo(0,0);
+}
+
+/* ==================== RESET ==================== */
+let resetArmed = false, resetTimer = null;
+function disarmReset(){
+  resetArmed = false; clearTimeout(resetTimer);
+  const b = $('btn-reset'); b.classList.remove('arm'); b.textContent = 'Reset';
+}
+$('btn-reset').onclick = ()=>{
+  if(!resetArmed){
+    resetArmed = true;
+    const b = $('btn-reset'); b.classList.add('arm'); b.textContent = 'Sicher?';
+    resetTimer = setTimeout(disarmReset, 3000);
+    return;
+  }
+  clearTimers();
+  state.round = 0;
+  clearSave();
+  show('scr-setup','Setup');
+  renderSetup(); renderResume();
+};
+
+/* ==================== SETUP ==================== */
+function renderNames(){
+  const box = $('names'); box.innerHTML='';
+  for(let i=0;i<state.players;i++){
+    const f = document.createElement('div'); f.className='name-field';
+    f.innerHTML = '<span class="idx">'+String(i+1).padStart(2,'0')+'</span>';
+    const inp = document.createElement('input');
+    inp.type='text'; inp.placeholder='Spieler '+(i+1); inp.maxLength=16;
+    inp.autocapitalize='words'; inp.value = state.names[i]||'';
+    inp.oninput = ()=>{ state.names[i]=inp.value; save(); };
+    f.appendChild(inp); box.appendChild(f);
+  }
+}
+function renderSetup(){
+  $('pl-val').textContent = state.players;
+  $('im-val').textContent = state.impostors;
+  $('imp-sub').textContent = 'max. ' + maxImp();
+  $('pl-minus').disabled = state.players<=3;
+  $('pl-plus').disabled  = state.players>=20;
+  $('im-minus').disabled = state.impostors<=1;
+  $('im-plus').disabled  = state.impostors>=maxImp();
+  $('tg-hint').classList.toggle('on', state.impostorHint);
+  document.querySelectorAll('#seg-table button').forEach(b=>b.classList.toggle('on', b.dataset.mode===state.tableMode));
+  $('seg-note').textContent = state.tableMode==='flip'
+    ? 'Der Bildschirm dreht sich automatisch zur Tischseite des Spielers, der gerade dran ist – erste Hälfte diesseits, zweite Hälfte gegenüber.'
+    : 'Keine Drehung – das Handy wird weitergereicht oder liegt in der Mitte.';
+  renderNames();
+}
+$('pl-minus').onclick = ()=>{ state.players=Math.max(3,state.players-1); state.impostors=Math.min(state.impostors,maxImp()); renderSetup(); save(); };
+$('pl-plus').onclick  = ()=>{ state.players=Math.min(20,state.players+1); renderSetup(); save(); };
+$('im-minus').onclick = ()=>{ state.impostors=Math.max(1,state.impostors-1); renderSetup(); save(); };
+$('im-plus').onclick  = ()=>{ state.impostors=Math.min(maxImp(),state.impostors+1); renderSetup(); save(); };
+$('tg-hint').onclick  = function(){ state.impostorHint=!state.impostorHint; this.classList.toggle('on',state.impostorHint); this.setAttribute('aria-checked',state.impostorHint); save(); };
+document.querySelectorAll('#seg-table button').forEach(b=>{
+  b.onclick = ()=>{ state.tableMode=b.dataset.mode; renderSetup(); save(); };
+});
+
+function renderCats(){
+  const g = $('cat-grid'); g.innerHTML='';
+  CATS.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'cat' + (state.selected.has(c.id)?' sel':'');
+    b.innerHTML = icon(c.id)
+      + (c.adult ? '<span class="tag-18">18+</span>' : '')
+      + '<span class="cat-name">'+c.name+'</span>'
+      + '<span class="cat-count">'+c.words.length+' Begriffe</span>';
+    b.onclick = ()=>{
+      state.selected.has(c.id) ? state.selected.delete(c.id) : state.selected.add(c.id);
+      renderCats(); $('setup-err').textContent=''; save();
+    };
+    g.appendChild(b);
+  });
+}
+$('cat-all').onclick  = ()=>{ CATS.forEach(c=>state.selected.add(c.id)); renderCats(); save(); };
+$('cat-none').onclick = ()=>{ state.selected.clear(); renderCats(); save(); };
+
+/* ==================== RUNDE STARTEN ==================== */
+function pickWord(){
+  const pool = CATS.filter(c=>state.selected.has(c.id));
+  const cat = pool[rnd(pool.length)];
+  let free = cat.words.filter(w=>!state.used[cat.id].has(w[0]));
+  if(!free.length){ state.used[cat.id].clear(); free = cat.words.slice(); }
+  const pick = free[rnd(free.length)];
+  state.used[cat.id].add(pick[0]);
+  return {catId:cat.id, word:pick[0], def:pick[1]};
+}
+function startRound(){
+  if(!state.selected.size){ $('setup-err').textContent='Mindestens eine Kategorie wählen.'; return; }
+  clearTimers();
+  state.round++;
+  const p = pickWord();
+  state.catId = p.catId; state.word = p.word; state.def = p.def;
+  state.roles = Array(state.players).fill(false);
+  let placed = 0;
+  while(placed < state.impostors){
+    const i = rnd(state.players);
+    if(!state.roles[i]){ state.roles[i]=true; placed++; }
+  }
+  state.starter = rnd(state.players);
+  state.playStep = 0;
+  state.revealIdx = 0;
+  renderReveal();
+  show('scr-reveal','Runde ' + String(state.round).padStart(2,'0'));
+}
+$('btn-start').onclick = startRound;
+$('btn-again').onclick = startRound;
+
+/* ==================== REVEAL ==================== */
+const holdcard = $('holdcard');
+let revealedOnce = false;
+
+function renderReveal(){
+  const i = state.revealIdx;
+  applyFlip(i);
+  $('rv-count').textContent = (i+1) + ' / ' + state.players;
+  $('rv-name').textContent  = pname(i);
+  revealedOnce = false;
+  holdcard.classList.remove('holding');
+  const last = (i === state.players-1);
+  const nb = $('btn-next');
+  nb.disabled = true;
+  nb.textContent = last ? 'Alle bereit – los' : 'Weitergeben an ' + pname(i+1);
+  $('rv-next-hint').textContent = last ? 'Danach startet Durchgang 1' : 'Erst aufdecken, dann weitergeben';
+  const s = $('secret');
+  const cat = catById(state.catId);
+  if(state.roles[i]){
+    s.innerHTML = IMP_FIG(92,'float')
+      + '<div class="imp-word">IMPOSTOR</div>'
+      + '<div class="secret-sub">Du kennst das Wort nicht. Bluff dich durch'
+      + (state.impostorHint ? ' – Kategorie: <b>' + cat.name + '</b>' : '')
+      + '.</div>';
+  } else {
+    s.innerHTML = icon(cat.id,'cat-ic')
+      + '<div class="secret-label">Dein Wort</div>'
+      + '<div class="secret-word">' + state.word + '</div>'
+      + '<div class="secret-def">' + state.def + '</div>';
+  }
+}
+function holdStart(e){ e.preventDefault(); holdcard.classList.add('holding'); if(!revealedOnce){ revealedOnce=true; $('btn-next').disabled=false; } }
+function holdEnd(e){ e.preventDefault(); holdcard.classList.remove('holding'); }
+holdcard.addEventListener('pointerdown', holdStart);
+holdcard.addEventListener('pointerup', holdEnd);
+holdcard.addEventListener('pointercancel', holdEnd);
+holdcard.addEventListener('pointerleave', holdEnd);
+holdcard.addEventListener('contextmenu', e=>e.preventDefault());
+
+$('btn-next').onclick = ()=>{
+  state.revealIdx++;
+  if(state.revealIdx < state.players){ renderReveal(); save(); }
+  else { renderPlayStep(); show('scr-play','Runde ' + String(state.round).padStart(2,'0')); }
+};
+
+/* ==================== DURCHGÄNGE (pro Spieler, 15 s) ==================== */
+const stepPass   = s => Math.floor(s/state.players)+1;
+const stepPlayer = s => (state.starter + (stepPass(s)-1) + (s % state.players)) % state.players;
+
+function renderPlayStep(){
+  clearTimers();
+  const s = state.playStep;
+  const p = stepPass(s);
+  const cur = stepPlayer(s);
+  applyFlip(cur);
+  document.querySelectorAll('#passbar .pseg').forEach((seg,i)=>seg.classList.toggle('done', i < p));
+  $('play-eyebrow').textContent = 'Durchgang ' + p + ' von 3';
+  $('play-name').textContent = pname(cur);
+  $('play-sub').innerHTML = (p===1)
+    ? 'Ein Hinweis – <b>ein Wort, mehr nicht</b>. Noch wird nicht diskutiert.'
+    : (p===2)
+      ? '<b>Nicht wiederholen</b>, was schon fiel.'
+      : 'Letzter Durchgang. Danach wird <b>gezeigt</b>.';
+  const lastStep = (s === state.players*3 - 1);
+  $('btn-pass-next').textContent = lastStep ? 'Zur Abstimmung' : 'Weiter: ' + pname(stepPlayer(s+1));
+  startTimer();
+}
+function startTimer(){
+  const tEl = $('timer'), num = $('t-num'), ring = $('ring'), lab = $('t-label');
+  const C = 308; // 2πr, r=49
+  let left = PASS_SECONDS;
+  tEl.classList.remove('low'); lab.classList.remove('up');
+  lab.textContent = 'Ein Hinweis · ein Wort';
+  num.textContent = left;
+  ring.style.transition = 'none';
+  ring.style.strokeDashoffset = 0;
+  void ring.getBoundingClientRect();
+  ring.style.transition = '';
+  const iv = setInterval(()=>{
+    left--;
+    if(left <= 0){
+      clearInterval(iv);
+      num.textContent = '0';
+      ring.style.strokeDashoffset = C;
+      tEl.classList.add('low');
+      lab.textContent = 'Zeit um'; lab.classList.add('up');
+      return;
+    }
+    num.textContent = left;
+    ring.style.strokeDashoffset = C * (1 - left/PASS_SECONDS);
+    if(left <= 5) tEl.classList.add('low');
+  }, 1000);
+  timers.push(iv);
+  requestAnimationFrame(()=>{ ring.style.strokeDashoffset = C * (1/PASS_SECONDS); });
+}
+$('btn-pass-next').onclick = ()=>{
+  clearTimers();
+  const lastStep = (state.playStep === state.players*3 - 1);
+  if(!lastStep){ state.playStep++; renderPlayStep(); save(); }
+  else { renderVoteIntro(); show('scr-vote','Runde ' + String(state.round).padStart(2,'0')); }
+};
+
+/* ==================== ABSTIMMUNG / COUNTDOWN ==================== */
+function renderVoteIntro(){
+  clearTimers();
+  $('vote-stage').innerHTML =
+    '<div class="stage-eyebrow">Abstimmung</div>'
+    + '<div class="stage-main">Finger bereit</div>'
+    + '<div class="divider"></div>'
+    + '<div class="stage-sub">Alle Hinweise sind raus. Beim Countdown zeigen <b>alle gleichzeitig</b> auf ihren Verdächtigen. Wer die meisten Finger kassiert, muss sich erklären.</div>';
+  $('btn-count').hidden = false;
+  $('btn-solve').hidden = true;
+}
+$('btn-count').onclick = ()=>{
+  $('btn-count').hidden = true;
+  const stage = $('vote-stage');
+  const tick = n => { stage.innerHTML = '<div class="count-num">' + n + '</div>'; };
+  tick(3);
+  timers.push(setTimeout(()=>tick(2), 1000));
+  timers.push(setTimeout(()=>tick(1), 2000));
+  timers.push(setTimeout(()=>{
+    stage.innerHTML = '<div class="count-go">AUF DEN<br>IMPOSTOR ZEIGEN</div>';
+  }, 3000));
+  timers.push(setTimeout(()=>{
+    stage.innerHTML = IMP_FIG(84,'float')
+      + '<div class="count-go">AUF DEN<br>IMPOSTOR ZEIGEN</div>'
+      + '<div class="divider"></div>'
+      + '<div class="stage-sub">Verdächtiger steht? Dann Karten auf den Tisch.</div>';
+    $('btn-solve').hidden = false;
+  }, 4500));
+};
+$('btn-solve').onclick = ()=>{
+  clearTimers();
+  const cat = catById(state.catId);
+  const imps = state.roles.map((r,i)=>r?pname(i):null).filter(Boolean);
+  $('res-ic').innerHTML = icon(cat.id,'stage-ic');
+  $('res-cat').textContent  = cat.name;
+  $('res-word').textContent = state.word;
+  $('res-def').textContent  = state.def;
+  $('res-fig').innerHTML    = IMP_FIG(76);
+  $('res-imp').innerHTML    = imps.join('<br>');
+  show('scr-result','Runde ' + String(state.round).padStart(2,'0'));
+};
+
+$('btn-newgame').onclick = ()=>{ state.round = 0; show('scr-setup','Setup'); renderSetup(); renderResume(); };
+
+/* ==================== RESUME ==================== */
+function renderResume(){
+  const s = loadSave();
+  const active = s && s.round > 0 && s.screen && s.screen !== 'scr-setup';
+  $('btn-resume').hidden = !active;
+  if(active) $('btn-resume').textContent = 'Runde ' + String(s.round).padStart(2,'0') + ' fortsetzen';
+}
+$('btn-resume').onclick = ()=>{
+  const s = loadSave(); if(!s) return;
+  state.players=s.players; state.names=s.names||[]; state.impostors=s.impostors;
+  state.impostorHint=s.impostorHint; state.tableMode=s.tableMode||'flip';
+  state.selected = new Set(s.selected);
+  CATS.forEach(c=>state.used[c.id] = new Set((s.used&&s.used[c.id])||[]));
+  state.round=s.round; state.starter=s.starter; state.playStep=s.playStep||0;
+  state.roles=s.roles; state.word=s.word; state.def=s.def; state.catId=s.catId;
+  state.revealIdx=s.revealIdx||0;
+  const r = 'Runde ' + String(state.round).padStart(2,'0');
+  if(s.screen==='scr-reveal'){ renderReveal(); show('scr-reveal',r); }
+  else if(s.screen==='scr-play'){ renderPlayStep(); show('scr-play',r); }
+  else { renderVoteIntro(); show('scr-vote',r); }
+};
+
+/* ==================== INIT ==================== */
+(function init(){
+  const s = loadSave();
+  if(s){
+    state.players = s.players||4; state.names = s.names||[];
+    state.impostors = Math.min(s.impostors||1, maxImp());
+    state.impostorHint = s.impostorHint!==false;
+    state.tableMode = s.tableMode||'flip';
+    if(s.selected) state.selected = new Set(s.selected);
+    if(s.used) CATS.forEach(c=>state.used[c.id] = new Set(s.used[c.id]||[]));
+  }
+  $('imp-back').innerHTML = IMP_FIG(72);
+  renderSetup();
+  renderCats();
+  renderResume();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
