@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impostor – Zurücksetzen</title>
+<style>
+  body{background:#0a0a0a; color:#e9e9e9; font-family:system-ui,sans-serif;
+    display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; text-align:center}
+  .box{padding:24px}
+  .s{color:#8b7ff5; font-size:14px; letter-spacing:.1em; text-transform:uppercase}
+  p{color:#9a9a9a; font-size:14px; line-height:1.5}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="s">Impostor</div>
+  <p id="msg">Gespeicherte Version wird entfernt …</p>
+</div>
+<script>
+(async ()=>{
+  try{
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if(window.caches){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+    document.getElementById('msg').textContent = 'Fertig – frische Version wird geladen …';
+  }catch(e){}
+  setTimeout(()=>{ location.replace('./?fresh=' + Date.now()); }, 600);
+})();
+</script>
+</body>
+</html>

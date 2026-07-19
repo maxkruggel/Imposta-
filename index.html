@@ -520,6 +520,10 @@ header{
   padding:2px 0 3px; cursor:pointer; transition:color .12s,border-color .12s;
 }
 .link-btn.arm{color:var(--warn); border-color:var(--warn)}
+.app-version{
+  font-size:9px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--muted-2); text-align:center; margin-top:var(--s3); font-weight:500;
+}
 
 @media (prefers-reduced-motion: reduce){
   .app,.screen.active,.count-num,.count-go,.wordmark span,.float,.imp-fig .eye,.holdcard{animation:none; transition:none}
@@ -649,6 +653,7 @@ header{
       <button class="btn btn-quiet" id="btn-resume" hidden>Runde fortsetzen</button>
       <button class="btn btn-accent" id="btn-start">Los geht's</button>
       <div class="hint-err" id="setup-err"></div>
+      <div class="app-version">Version 13</div>
     </div>
   </section>
 
@@ -1979,7 +1984,18 @@ $('btn-resume').onclick = ()=>{
 </script>
 <script>
 if('serviceWorker' in navigator){
-  addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>{ reg.update().catch(()=>{}); })
+      .catch(()=>{});
+    // Wenn ein neuer Service Worker übernimmt, einmal automatisch neu laden
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+  });
 }
 </script>
 </body>
