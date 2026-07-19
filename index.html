@@ -313,6 +313,25 @@ header{
   text-shadow:0 0 30px var(--accent-glow);
 }
 
+/* ============ Extras: Begriff-Bilder, Verdachts-Index, Statistik ============ */
+.word-img{max-width:58%; max-height:120px; border-radius:var(--r-md); border:1px solid var(--line); margin-top:var(--s3)}
+.sus-list{width:100%; max-width:340px; margin-top:var(--s5); text-align:left}
+.sus-row{display:flex; align-items:center; gap:var(--s3); padding:var(--s2) 0; border-bottom:1px solid var(--line-soft)}
+.sus-row:last-of-type{border-bottom:none}
+.sus-name{flex:0 0 96px; font-size:13px; font-weight:500; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sus-bar{flex:1; height:4px; background:var(--line-soft); border-radius:var(--r-pill); overflow:hidden}
+.sus-fill{height:100%; background:var(--accent); border-radius:var(--r-pill)}
+.sus-val{font-family:var(--mono); font-size:10px; color:var(--muted); width:32px; text-align:right}
+.sus-note{font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted-2); margin-top:var(--s3); text-align:center}
+.stat-val{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.06em; text-align:right; white-space:nowrap}
+.stat-val b{color:var(--ink); font-weight:700}
+.link-btn{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); background:none; border:none; border-bottom:1px solid var(--line);
+  padding:2px 0 3px; cursor:pointer; transition:color .12s,border-color .12s;
+}
+.link-btn.arm{color:var(--warn); border-color:var(--warn)}
+
 @media (prefers-reduced-motion: reduce){
   .app,.screen.active,.count-num,.count-go,.wordmark span,.float,.imp-fig .eye,.holdcard{animation:none; transition:none}
 }
@@ -385,6 +404,32 @@ header{
         <button data-mode="static">Wandert · runder Tisch</button>
       </div>
       <div class="seg-note" id="seg-note">Der Bildschirm dreht sich automatisch zur Tischseite des Spielers, der gerade dran ist – erste Hälfte diesseits, zweite Hälfte gegenüber.</div>
+    </div>
+
+    <div class="sec">
+      <span class="eyebrow">Extras</span>
+      <div class="line-row">
+        <div>
+          <div class="row-label">Tonanalyse</div>
+          <div class="row-sub">Mikro misst Zögern, Pausen &amp; Tonlage – Spielerei, kein Lügendetektor</div>
+        </div>
+        <div class="toggle" id="tg-voice" role="switch" aria-checked="false"></div>
+      </div>
+      <div class="line-row">
+        <div>
+          <div class="row-label">Begriff-Bilder</div>
+          <div class="row-sub">Zeigt zum Wort ein Bild – falls eins im Bilder-Ordner liegt</div>
+        </div>
+        <div class="toggle" id="tg-pics" role="switch" aria-checked="false"></div>
+      </div>
+      <div class="line-row">
+        <div>
+          <div class="row-label">Rundenstatistik</div>
+          <div class="row-sub" id="stats-sub">Noch keine Runden erfasst</div>
+        </div>
+        <button class="link-btn" id="btn-stats">Anzeigen</button>
+      </div>
+      <div class="hint-err" id="mic-err"></div>
     </div>
 
     <div class="sec">
@@ -469,14 +514,28 @@ header{
       <div class="stage-eyebrow" id="res-cat">Kategorie</div>
       <div class="stage-word" id="res-word">Wort</div>
       <div class="stage-def" id="res-def"></div>
+      <img class="word-img" id="res-img" alt="" hidden>
       <div class="divider"></div>
       <span id="res-fig" class="float"></span>
       <div class="stage-eyebrow">Impostor war</div>
       <div class="res-names" id="res-imp">–</div>
+      <div id="res-outcome"></div>
     </div>
     <div class="actions">
       <button class="btn btn-accent" id="btn-again">Nächste Runde</button>
       <button class="btn btn-quiet" id="btn-newgame">Neues Spiel</button>
+    </div>
+  </section>
+
+  <!-- ============ STATISTIK ============ -->
+  <section class="screen" id="scr-stats">
+    <div class="sec">
+      <span class="eyebrow">Rundenstatistik</span>
+      <div id="stats-list"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-accent" id="btn-stats-back">Zurück zum Setup</button>
+      <button class="btn btn-quiet" id="btn-stats-clear">Statistik löschen</button>
     </div>
   </section>
 </div>
@@ -919,6 +978,106 @@ const SND = (()=>{
   };
 })();
 
+/* ==================== RUNDENSTATISTIK ==================== */
+const STATS_KEY = 'impostor_stats';
+const STATS = {
+  load(){ if(!store) return {}; try{ return JSON.parse(store.getItem(STATS_KEY)) || {}; }catch(e){ return {}; } },
+  persist(d){ if(store){ try{ store.setItem(STATS_KEY, JSON.stringify(d)); }catch(e){} } },
+  record(outcome){
+    const d = this.load();
+    for(let i=0; i<state.players; i++){
+      const n = pname(i);
+      const e = d[n] || (d[n] = {rounds:0, imp:0, caught:0, escaped:0});
+      e.rounds++;
+      if(state.roles[i]) e.imp++, e[outcome === 'caught' ? 'caught' : 'escaped']++;
+    }
+    this.persist(d);
+  },
+  clear(){ if(store){ try{ store.removeItem(STATS_KEY); }catch(e){} } },
+  totalRounds(){ return Object.values(this.load()).reduce((m,e)=>Math.max(m,e.rounds), 0); }
+};
+
+/* ==================== TONANALYSE (Spielerei, läuft nur lokal) ==================== */
+const VOICE = (()=>{
+  let stream=null, ac=null, analyser=null, loop=null, cur=null;
+  let data = {};
+  async function enable(){
+    if(stream) return true;
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ac.createMediaStreamSource(stream);
+      analyser = ac.createAnalyser();
+      analyser.fftSize = 2048;
+      src.connect(analyser);
+      return true;
+    }catch(e){ release(); return false; }
+  }
+  function release(){
+    if(loop){ clearInterval(loop); loop=null; }
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+    if(ac){ try{ ac.close(); }catch(e){} ac=null; analyser=null; }
+    cur = null;
+  }
+  function pitchOf(buf, sr){
+    let best=-1, bestCorr=0;
+    const min=Math.floor(sr/350), max=Math.min(Math.floor(sr/70), buf.length-1);
+    for(let lag=min; lag<=max; lag++){
+      let corr=0;
+      for(let i=0; i<buf.length-lag; i+=2) corr += buf[i]*buf[i+lag];
+      if(corr>bestCorr){ bestCorr=corr; best=lag; }
+    }
+    return best>0 ? sr/best : 0;
+  }
+  function start(name){
+    if(!analyser) return;
+    if(ac.state==='suspended') ac.resume();
+    stop();
+    cur = {name, t0:performance.now(), first:0, frames:0, quiet:0, pitches:[]};
+    const buf = new Float32Array(analyser.fftSize);
+    loop = setInterval(()=>{
+      analyser.getFloatTimeDomainData(buf);
+      let sum=0; for(let i=0;i<buf.length;i++) sum += buf[i]*buf[i];
+      const rms = Math.sqrt(sum/buf.length);
+      const speaking = rms > 0.02;
+      if(speaking && !cur.first) cur.first = performance.now() - cur.t0;
+      if(cur.first){ cur.frames++; if(!speaking) cur.quiet++; }
+      if(speaking){ const f = pitchOf(buf, ac.sampleRate); if(f) cur.pitches.push(f); }
+    }, 80);
+  }
+  function stop(){
+    if(loop){ clearInterval(loop); loop=null; }
+    if(!cur) return;
+    const d = data[cur.name] || (data[cur.name] = {hes:[], pause:[], pitch:[]});
+    d.hes.push(cur.first ? cur.first/1000 : 6);
+    d.pause.push(cur.frames ? cur.quiet/cur.frames : 1);
+    if(cur.pitches.length > 4){
+      const st = cur.pitches.map(f=>12*Math.log2(f/110));
+      const m = st.reduce((a,b)=>a+b,0)/st.length;
+      d.pitch.push(Math.sqrt(st.reduce((a,b)=>a+(b-m)*(b-m),0)/st.length));
+    }
+    cur = null;
+  }
+  function indices(){
+    const avg = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+    return Object.entries(data).map(([name,d])=>{
+      const hes   = Math.min(avg(d.hes)/4, 1);
+      const pause = Math.min(avg(d.pause)*1.6, 1);
+      const pitch = Math.min(avg(d.pitch)/5, 1);
+      return {name, val: Math.round(100*(.4*hes + .3*pause + .3*pitch))};
+    }).sort((a,b)=>b.val-a.val);
+  }
+  return {enable, release, start, stop, indices, reset(){ data={}; }, get active(){ return !!stream; }};
+})();
+
+/* ==================== BEGRIFF-BILDER ==================== */
+const wordSlug = w => w.toLowerCase()
+  .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+  .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const wordImg = () => 'assets/begriffe/' + state.catId + '/' + wordSlug(state.word) + '.webp';
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
 /* ==================== STATE ==================== */
 const PASS_SECONDS = 15;
 const state = {
@@ -927,6 +1086,8 @@ const state = {
   impostors: 1,
   impostorHint: true,
   tableMode: 'flip',
+  voice: false,
+  pics: false,
   selected: new Set(CATS.filter(c=>!c.adult).map(c=>c.id)),
   used: {},
   round: 0,
@@ -952,6 +1113,7 @@ function save(){
     store.setItem(SAVE_KEY, JSON.stringify({
       players:state.players, names:state.names, impostors:state.impostors,
       impostorHint:state.impostorHint, tableMode:state.tableMode,
+      voice:state.voice, pics:state.pics,
       selected:[...state.selected],
       used:Object.fromEntries(CATS.map(c=>[c.id,[...state.used[c.id]]])),
       round:state.round, starter:state.starter, playStep:state.playStep,
@@ -1009,6 +1171,7 @@ $('btn-reset').onclick = ()=>{
     return;
   }
   clearTimers();
+  VOICE.release();
   state.round = 0;
   clearSave();
   show('scr-setup','Setup');
@@ -1037,6 +1200,12 @@ function renderSetup(){
   $('im-minus').disabled = state.impostors<=1;
   $('im-plus').disabled  = state.impostors>=maxImp();
   $('tg-hint').classList.toggle('on', state.impostorHint);
+  $('tg-voice').classList.toggle('on', state.voice);
+  $('tg-voice').setAttribute('aria-checked', state.voice);
+  $('tg-pics').classList.toggle('on', state.pics);
+  $('tg-pics').setAttribute('aria-checked', state.pics);
+  const tr = STATS.totalRounds();
+  $('stats-sub').textContent = tr ? tr + ' Runden erfasst' : 'Noch keine Runden erfasst';
   document.querySelectorAll('#seg-table button').forEach(b=>b.classList.toggle('on', b.dataset.mode===state.tableMode));
   $('seg-note').textContent = state.tableMode==='flip'
     ? 'Der Bildschirm dreht sich automatisch zur Tischseite des Spielers, der gerade dran ist – erste Hälfte diesseits, zweite Hälfte gegenüber.'
@@ -1048,6 +1217,47 @@ $('pl-plus').onclick  = ()=>{ state.players=Math.min(20,state.players+1); render
 $('im-minus').onclick = ()=>{ state.impostors=Math.max(1,state.impostors-1); renderSetup(); save(); };
 $('im-plus').onclick  = ()=>{ state.impostors=Math.min(maxImp(),state.impostors+1); renderSetup(); save(); };
 $('tg-hint').onclick  = function(){ state.impostorHint=!state.impostorHint; this.classList.toggle('on',state.impostorHint); this.setAttribute('aria-checked',state.impostorHint); save(); };
+$('tg-voice').onclick = function(){
+  state.voice = !state.voice;
+  this.classList.toggle('on', state.voice); this.setAttribute('aria-checked', state.voice);
+  $('mic-err').textContent = '';
+  if(!state.voice) VOICE.release();
+  save();
+};
+$('tg-pics').onclick = function(){
+  state.pics = !state.pics;
+  this.classList.toggle('on', state.pics); this.setAttribute('aria-checked', state.pics);
+  save();
+};
+
+/* ==================== STATISTIK-SCREEN ==================== */
+function renderStats(){
+  const d = STATS.load();
+  const names = Object.keys(d).sort((a,b)=>d[b].imp-d[a].imp || d[b].rounds-d[a].rounds);
+  const box = $('stats-list');
+  if(!names.length){
+    box.innerHTML = '<div class="row-sub" style="padding:var(--s3) 0">Noch nichts erfasst – nach der Auflösung einer Runde einfach „Enttarnt" oder „Durchgekommen" antippen.</div>';
+    return;
+  }
+  box.innerHTML = names.map(n=>{
+    const e = d[n];
+    return '<div class="line-row"><div><div class="row-label">'+esc(n)+'</div>'
+      + '<div class="row-sub">'+e.rounds+' Runden · '+e.imp+'× Impostor</div></div>'
+      + '<div class="stat-val"><b>'+e.caught+'</b>× enttarnt · <b>'+e.escaped+'</b>× durch</div></div>';
+  }).join('');
+}
+$('btn-stats').onclick = ()=>{ renderStats(); show('scr-stats','Statistik'); };
+$('btn-stats-back').onclick = ()=>{ show('scr-setup','Setup'); renderSetup(); renderResume(); };
+let statsArm = false, statsArmT = null;
+$('btn-stats-clear').onclick = function(){
+  if(!statsArm){
+    statsArm = true; this.textContent = 'Sicher? Nochmal tippen';
+    statsArmT = setTimeout(()=>{ statsArm=false; this.textContent='Statistik löschen'; }, 3000);
+    return;
+  }
+  clearTimeout(statsArmT); statsArm = false; this.textContent = 'Statistik löschen';
+  STATS.clear(); renderStats();
+};
 document.querySelectorAll('#seg-table button').forEach(b=>{
   b.onclick = ()=>{ state.tableMode=b.dataset.mode; renderSetup(); save(); };
 });
@@ -1081,9 +1291,18 @@ function pickWord(){
   state.used[cat.id].add(pick[0]);
   return {catId:cat.id, word:pick[0], def:pick[1]};
 }
+let statsRecorded = false;
 function startRound(){
   if(!state.selected.size){ $('setup-err').textContent='Mindestens eine Kategorie wählen.'; return; }
   clearTimers();
+  statsRecorded = false;
+  VOICE.reset();
+  $('mic-err').textContent = '';
+  if(state.voice){
+    VOICE.enable().then(ok=>{
+      if(!ok) $('mic-err').textContent = 'Mikrofon nicht verfügbar – die Tonanalyse bleibt diese Runde aus.';
+    });
+  }
   state.round++;
   const p = pickWord();
   state.catId = p.catId; state.word = p.word; state.def = p.def;
@@ -1130,7 +1349,8 @@ function renderReveal(){
     s.innerHTML = icon(cat.id,'cat-ic')
       + '<div class="secret-label">Dein Wort</div>'
       + '<div class="secret-word">' + state.word + '</div>'
-      + '<div class="secret-def">' + state.def + '</div>';
+      + '<div class="secret-def">' + state.def + '</div>'
+      + (state.pics ? '<img class="word-img" src="' + wordImg() + '" alt="" onerror="this.remove()">' : '');
   }
 }
 function holdStart(e){ e.preventDefault(); holdcard.classList.add('holding'); if(!revealedOnce){ revealedOnce=true; $('btn-next').disabled=false; } }
@@ -1168,6 +1388,7 @@ function renderPlayStep(){
   const lastStep = (s === state.players*3 - 1);
   $('btn-pass-next').textContent = lastStep ? 'Zur Abstimmung' : 'Weiter: ' + pname(stepPlayer(s+1));
   startTimer();
+  if(state.voice && VOICE.active) VOICE.start(pname(cur));
 }
 function startTimer(){
   const tEl = $('timer'), num = $('t-num'), ring = $('ring'), lab = $('t-label');
@@ -1200,6 +1421,7 @@ function startTimer(){
 }
 $('btn-pass-next').onclick = ()=>{
   clearTimers();
+  VOICE.stop();
   const lastStep = (state.playStep === state.players*3 - 1);
   if(!lastStep){ state.playStep++; renderPlayStep(); save(); }
   else { renderVoteIntro(); show('scr-vote','Runde ' + String(state.round).padStart(2,'0')); }
@@ -1208,11 +1430,25 @@ $('btn-pass-next').onclick = ()=>{
 /* ==================== ABSTIMMUNG / COUNTDOWN ==================== */
 function renderVoteIntro(){
   clearTimers();
+  let sus = '';
+  if(state.voice){
+    const idx = VOICE.indices();
+    if(idx.length){
+      sus = '<div class="sus-list">'
+        + '<div class="stage-eyebrow" style="margin-bottom:var(--s2)">Verdachts-Index</div>'
+        + idx.map(x=>'<div class="sus-row"><div class="sus-name">'+esc(x.name)+'</div>'
+            + '<div class="sus-bar"><div class="sus-fill" style="width:'+x.val+'%"></div></div>'
+            + '<div class="sus-val">'+x.val+'</div></div>').join('')
+        + '<div class="sus-note">Spielerei aus Zögern, Pausen &amp; Tonlage – kein Lügendetektor</div>'
+        + '</div>';
+    }
+  }
   $('vote-stage').innerHTML =
     '<div class="stage-eyebrow">Abstimmung</div>'
     + '<div class="stage-main">Finger bereit</div>'
     + '<div class="divider"></div>'
-    + '<div class="stage-sub">Alle Hinweise sind raus. Beim Countdown zeigen <b>alle gleichzeitig</b> auf ihren Verdächtigen. Wer die meisten Finger kassiert, muss sich erklären.</div>';
+    + '<div class="stage-sub">Alle Hinweise sind raus. Beim Countdown zeigen <b>alle gleichzeitig</b> auf ihren Verdächtigen. Wer die meisten Finger kassiert, muss sich erklären.</div>'
+    + sus;
   $('btn-count').hidden = false;
   $('btn-solve').hidden = true;
 }
@@ -1246,10 +1482,40 @@ $('btn-solve').onclick = ()=>{
   $('res-def').textContent  = state.def;
   $('res-fig').innerHTML    = IMP_FIG(76);
   $('res-imp').innerHTML    = imps.join('<br>');
+  const ri = $('res-img');
+  ri.hidden = true; ri.removeAttribute('src');
+  if(state.pics){
+    ri.onload  = ()=>{ ri.hidden = false; };
+    ri.onerror = ()=>{ ri.hidden = true; };
+    ri.src = wordImg();
+  }
+  renderOutcome();
   show('scr-result','Runde ' + String(state.round).padStart(2,'0'));
 };
 
-$('btn-newgame').onclick = ()=>{ state.round = 0; show('scr-setup','Setup'); renderSetup(); renderResume(); };
+function renderOutcome(){
+  const box = $('res-outcome');
+  if(statsRecorded){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="divider"></div>'
+    + '<div class="stage-eyebrow">Und? Erwischt?</div>'
+    + '<div class="seg" id="seg-outcome">'
+    + '<button data-oc="caught">Enttarnt</button>'
+    + '<button data-oc="escaped">Durchgekommen</button>'
+    + '</div>';
+  box.querySelectorAll('#seg-outcome button').forEach(b=>{
+    b.onclick = ()=>{
+      if(statsRecorded) return;
+      statsRecorded = true;
+      STATS.record(b.dataset.oc);
+      SND.tick();
+      box.innerHTML = '<div class="divider"></div>'
+        + '<div class="stage-eyebrow">Notiert – Impostor '
+        + (b.dataset.oc==='caught' ? 'enttarnt' : 'durchgekommen') + '</div>';
+    };
+  });
+}
+
+$('btn-newgame').onclick = ()=>{ state.round = 0; VOICE.release(); show('scr-setup','Setup'); renderSetup(); renderResume(); };
 
 /* ==================== RESUME ==================== */
 function renderResume(){
@@ -1262,6 +1528,8 @@ $('btn-resume').onclick = ()=>{
   const s = loadSave(); if(!s) return;
   state.players=s.players; state.names=s.names||[]; state.impostors=s.impostors;
   state.impostorHint=s.impostorHint; state.tableMode=s.tableMode||'flip';
+  state.voice=!!s.voice; state.pics=!!s.pics;
+  if(state.voice) VOICE.enable();
   state.selected = new Set(s.selected);
   CATS.forEach(c=>state.used[c.id] = new Set((s.used&&s.used[c.id])||[]));
   state.round=s.round; state.starter=s.starter; state.playStep=s.playStep||0;
