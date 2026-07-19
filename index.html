@@ -80,6 +80,12 @@ body::after{
   content:''; position:fixed; inset:-50%; pointer-events:none; z-index:50; opacity:.28;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+/* Scrim: Inhalt läuft beim Scrollen nicht sichtbar in die iOS-Statusleiste */
+.top-scrim{
+  position:fixed; top:0; left:0; right:0; z-index:60; pointer-events:none;
+  height:calc(env(safe-area-inset-top) + 6px);
+  background:linear-gradient(180deg, var(--bg) 60%, transparent);
+}
 .app{
   max-width:520px; margin:0 auto; min-height:100dvh; position:relative; z-index:1;
   display:flex; flex-direction:column;
@@ -196,7 +202,7 @@ header{
 .cat{
   position:relative; text-align:left;
   background:var(--surface-2); border:1px solid var(--line-soft); border-radius:var(--r-md);
-  padding:var(--s4) var(--s3) var(--s3); min-height:92px; cursor:pointer;
+  padding:48px var(--s3) var(--s3); min-height:108px; cursor:pointer;
   display:flex; flex-direction:column; justify-content:flex-end; gap:6px;
   transition:border-color .15s, background .15s, box-shadow .15s, transform .1s;
 }
@@ -501,6 +507,7 @@ header{
     </linearGradient>
   </defs>
 </svg>
+<div class="top-scrim" aria-hidden="true"></div>
 <div id="splash" aria-hidden="true"></div>
 <div class="app" id="app">
   <header>
