@@ -453,6 +453,9 @@ header{
 .res-w,.stage-word,.secret-word{word-break:normal; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto; min-width:0}
 .res-w.long{font-size:20px}
 .secret-word.long{font-size:21px}
+/* Lange Spielernamen ohne Leerzeichen dürfen nie überlaufen */
+.player-name,.stage-main,.res-names,.row-label,.res-q{overflow-wrap:anywhere}
+.line-row > div:first-child{min-width:0}
 .res-d{font-size:13.5px; color:var(--muted); line-height:1.5; margin-top:var(--s2)}
 .res-q{font-size:15px; font-weight:500; color:var(--ink); margin-bottom:var(--s3); line-height:1.4}
 .res-q.done{color:var(--accent-ink); margin-bottom:0}
