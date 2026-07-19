@@ -331,6 +331,7 @@ header{
     <div class="wordmark">IMPOSTOR<span>.</span></div>
     <div class="hdr-right">
       <div class="readout" id="hdr-readout">SETUP</div>
+      <button class="btn-reset" id="btn-sound" aria-pressed="true">Ton an</button>
       <button class="btn-reset" id="btn-reset" hidden>Reset</button>
     </div>
   </header>
@@ -877,6 +878,46 @@ const CATS = [
 /* ==================== STORAGE (Feature-Detection) ==================== */
 const store = (()=>{ try{ const t='__t'; localStorage.setItem(t,'1'); localStorage.removeItem(t); return localStorage; }catch(e){ return null; } })();
 const SAVE_KEY = 'impostor_v4';
+const SOUND_KEY = 'impostor_sound';
+
+/* ==================== SOUNDS (Web Audio, dezent) ==================== */
+const SND = (()=>{
+  let ctx = null;
+  let muted = store ? store.getItem(SOUND_KEY) === '0' : false;
+  function ensure(){
+    if(muted) return null;
+    if(!ctx){
+      try{ ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e){ return null; }
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function blip(freq, dur, vol, delay){
+    const c = ensure(); if(!c) return;
+    const t = c.currentTime + (delay || 0);
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'triangle'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + .006);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + dur + .05);
+  }
+  return {
+    tick(){ blip(1000, .06, .07); },
+    go(){ blip(660, .12, .11); blip(880, .2, .09, .1); },
+    reveal(){ blip(523.25, .16, .1); blip(622.25, .16, .1, .13); blip(783.99, .3, .1, .26); },
+    unlock(){ ensure(); },
+    get muted(){ return muted; },
+    toggle(){
+      muted = !muted;
+      if(store){ try{ store.setItem(SOUND_KEY, muted ? '0' : '1'); }catch(e){} }
+      if(!muted) this.tick();
+      return muted;
+    }
+  };
+})();
 
 /* ==================== STATE ==================== */
 const PASS_SECONDS = 15;
@@ -940,6 +981,19 @@ function show(id, readout){
   save();
   window.scrollTo(0,0);
 }
+
+/* ==================== TON-TOGGLE ==================== */
+function renderSoundBtn(){
+  const b = $('btn-sound');
+  b.textContent = SND.muted ? 'Ton aus' : 'Ton an';
+  b.setAttribute('aria-pressed', String(!SND.muted));
+}
+$('btn-sound').onclick = ()=>{ SND.toggle(); renderSoundBtn(); };
+renderSoundBtn();
+document.addEventListener('pointerdown', function unlockAudio(){
+  SND.unlock();
+  document.removeEventListener('pointerdown', unlockAudio);
+});
 
 /* ==================== RESET ==================== */
 let resetArmed = false, resetTimer = null;
@@ -1134,11 +1188,12 @@ function startTimer(){
       ring.style.strokeDashoffset = C;
       tEl.classList.add('low');
       lab.textContent = 'Zeit um'; lab.classList.add('up');
+      SND.go();
       return;
     }
     num.textContent = left;
     ring.style.strokeDashoffset = C * (1 - left/PASS_SECONDS);
-    if(left <= 5) tEl.classList.add('low');
+    if(left <= 5){ tEl.classList.add('low'); SND.tick(); }
   }, 1000);
   timers.push(iv);
   requestAnimationFrame(()=>{ ring.style.strokeDashoffset = C * (1/PASS_SECONDS); });
@@ -1164,12 +1219,13 @@ function renderVoteIntro(){
 $('btn-count').onclick = ()=>{
   $('btn-count').hidden = true;
   const stage = $('vote-stage');
-  const tick = n => { stage.innerHTML = '<div class="count-num">' + n + '</div>'; };
+  const tick = n => { stage.innerHTML = '<div class="count-num">' + n + '</div>'; SND.tick(); };
   tick(3);
   timers.push(setTimeout(()=>tick(2), 1000));
   timers.push(setTimeout(()=>tick(1), 2000));
   timers.push(setTimeout(()=>{
     stage.innerHTML = '<div class="count-go">AUF DEN<br>IMPOSTOR ZEIGEN</div>';
+    SND.go();
   }, 3000));
   timers.push(setTimeout(()=>{
     stage.innerHTML = IMP_FIG(84,'float')
@@ -1181,6 +1237,7 @@ $('btn-count').onclick = ()=>{
 };
 $('btn-solve').onclick = ()=>{
   clearTimers();
+  SND.reveal();
   const cat = catById(state.catId);
   const imps = state.roles.map((r,i)=>r?pname(i):null).filter(Boolean);
   $('res-ic').innerHTML = icon(cat.id,'stage-ic');
